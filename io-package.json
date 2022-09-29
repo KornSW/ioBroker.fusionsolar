@@ -1,0 +1,83 @@
+{
+    "common": {
+        "name": "fusionsolar",
+        "version": "0.1.0",
+        "news": {
+            "0.1.0": {
+                "en": "initial release",
+                "de": "Erstveröffentlichung"
+            }            
+        },
+        "title": "Huawei FusionSolar API",
+        "titleLang": {
+            "en": "Huawei FusionSolar API",
+            "de": "Huawei FusionSolar API"
+        },
+        "desc": {
+            "en": "Communicates with the Huawei FusionSolar API",
+            "de": "Kommuniziert mit der Huawei FusionSolar API"
+        },
+        "authors": [
+            "KornSW"
+        ],
+        "keywords": [
+            "Huawei",
+            "FusionSolar",
+            "SUN2000",
+            "pv"
+        ],
+        "license": "MIT",
+        "platform": "Javascript/Node.js",
+        "main": "main.js",
+        "icon": "sun2000.png",
+        "enabled": true,
+        "extIcon": "https://raw.githubusercontent.com/KornSW/ioBroker.FusionSolar/master/admin/sun2000.png",
+        "readme": "https://github.com/KornSW/ioBroker.FusionSolar/blob/master/README.md",
+        "loglevel": "info",
+        "mode": "daemon",
+        "type": "energy",
+        "compact": true,
+        "connectionType": "cloud",
+        "dataSource": "poll",
+        "materialize": true,
+        "dependencies": [
+            {
+                "js-controller": ">=3.1.0"
+            }
+        ]
+    },
+    "protectedNative": [
+        "client_secret"
+      ],
+    "encryptedNative": [
+        "client_secret"
+      ],    
+    "native": {
+        "username": "",
+        "client_secret": "",
+        "polltime": 60
+    },
+    "objects": [],
+    "instanceObjects": [
+        {
+            "_id": "info",
+            "type": "channel",
+            "common": {
+                "name": "Information"
+            },
+            "native": {}
+        },        
+        {
+        "_id": "info.connection",
+        "type": "state",
+        "common": {
+            "role": "indicator.connected",
+            "name": "If communication with the cloud works",
+            "type": "boolean",
+            "read": true,
+            "write": false,
+            "def": false
+        },
+        "native": {}
+    }]
+}

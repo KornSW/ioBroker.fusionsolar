@@ -1,0 +1,40 @@
+{
+    "cli": true,
+    "adapterName": "fusionsolar",
+    "title": "fusionsolar",
+    "description": "Adapter to connect Huawei FusionSolar API",
+    "keywords": [
+        "Huawei",
+        "FusionSolar",
+        "SUN2000",
+        "pv"
+    ],
+    "expert": "no",
+    "features": [
+        "adapter"
+    ],
+    "adminFeatures": [],
+    "type": "energy",
+    "startMode": "daemon",
+    "connectionType": "cloud",
+    "dataSource": "poll",
+    "connectionIndicator": "no",
+    "language": "JavaScript",
+    "adminReact": "no",
+    "tools": [
+        "ESLint",
+        "type checking"
+    ],
+    "indentation": "Space (4)",
+    "quotes": "single",
+    "es6class": "yes",
+    "authorName": "KornSW",
+    "authorGithub": "KornSW",
+    "authorEmail": "kornsw@int-it.de",
+    "gitRemoteProtocol": "HTTPS",
+    "gitCommit": "no",
+    "license": "MIT License",
+    "ci": "gh-actions",
+    "dependabot": "no",
+    "creatorVersion": "1.31.0"
+}

@@ -1,0 +1,124 @@
+<html>
+<head>
+    <!-- Load ioBroker scripts and styles-->
+    <link rel="stylesheet" type="text/css" href="../../css/adapter.css" />
+    <link rel="stylesheet" type="text/css" href="../../lib/css/materialize.css">
+
+    <script type="text/javascript" src="../../lib/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="../../socket.io/socket.io.js"></script>
+
+    <script type="text/javascript" src="../../js/translate.js"></script>
+    <script type="text/javascript" src="../../lib/js/materialize.js"></script>
+    <script type="text/javascript" src="../../js/adapter-settings.js"></script>
+
+    <!-- Load our own files -->
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <script type="text/javascript" src="words.js"></script>
+
+    <script type="text/javascript">
+        var _secret;
+  
+
+        // This will be called by the admin adapter when the settings page loads
+        function load(settings, onChange) {
+            if (typeof supportsFeature !== 'function' || !supportsFeature('ADAPTER_AUTO_DECRYPT_NATIVE')) {
+
+                if (typeof systemSecret !== 'undefined') {
+                    _secret = systemSecret;
+                } else {
+                    _secret = (systemConfig && systemConfig.native && systemConfig.native.secret) || 'Zgfr56gFe87jJOM';
+                }
+
+                if (settings.client_secret) {
+                    settings.client_secret = decrypt(_secret, settings.client_secret);
+                }                
+            }
+            
+            // example: select elements with id=key and class=value and insert value
+            if (!settings) return;
+            $('.value').each(function () {
+                var $key = $(this);
+                var id = $key.attr('id');
+                if ($key.attr('type') === 'checkbox') {
+                    // do not call onChange direct, because onChange could expect some arguments
+                    $key.prop('checked', settings[id])
+                        .on('change', () => onChange())
+                        ;
+                } else {
+                    // do not call onChange direct, because onChange could expect some arguments
+                    $key.val(settings[id])
+                        .on('change', () => onChange())
+                        .on('keyup', () => onChange())
+                        ;
+                }
+            });
+            onChange(false);
+            
+            // reinitialize all the Materialize labels on the page if you are dynamically adding inputs:
+            if (M) M.updateTextFields();
+        }
+
+        // This will be called by the admin adapter when the user presses the save button
+        function save(callback) {
+            // example: select elements with class=value and build settings object
+            console.log(_secret);
+            var obj = {};
+            $('.value').each(function () {
+                var $this = $(this);
+                var id = $this.attr('id');
+                if ($this.attr('type') === 'checkbox') {
+                    obj[id] = $this.prop('checked');
+                } else {
+                    var value = $this.val();
+                    if (typeof supportsFeature !== 'function' || !supportsFeature('ADAPTER_AUTO_DECRYPT_NATIVE')) {
+                        if (id === 'client_secret') {
+                            value = encrypt(_secret, value);
+                        }
+                    }
+                    obj[id] = value;
+                }
+            });
+            callback(obj);
+        }
+    </script>
+</head>
+<body>
+
+    <div class="m adapter-container">
+
+        <div class="row">
+            <div class="col s12 m4 l2">
+                <img src="sun2000.png" class="logo">
+            </div>
+        </div>
+
+		<div class="row">
+			<div class="col s12">
+				<h6 class="title translate">Account settings</h6>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col s6 input-field">
+                <input type="text" class="value" id="username" />
+                <label for="username" class="translate">Username</label>
+            </div>
+
+            <div class="col s6 input-field">
+                <input type="password" class="value" id="client_secret" />
+                <label for="client_secret" class="translate">Password</label>
+            </div>
+		</div>
+		<div class="row">
+			<div class="col s12">
+				<h6 class="title translate">Api settings</h6>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col s6 input-field">
+                <input type="number" class="value" id="polltime" />
+                <label for="polltime" class="translate">Poll interval in seconds</label>
+            </div>
+		</div>
+    </div>
+</body>
+</html>
