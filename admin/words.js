@@ -64,15 +64,15 @@ systemDictionary = {
         'zh-cn': 'api设置'
     },
     'Account settings': {
-        'en': 'Account settings',
-        'de': 'Kontoeinstellungen',
-        'ru': 'Настройки учетной записи',
-        'pt': 'Configurações de Conta',
-        'nl': 'Account instellingen',
-        'fr': 'Paramètres du compte',
-        'it': "Impostazioni dell'account",
-        'es': 'Configuraciones de la cuenta',
-        'pl': 'Ustawienia konta',
-        'zh-cn': ',帐号设定'
+        'en': 'Account settings (can be requested from \'eu_inverter_support@huawei.com\')',
+        'de': 'Kontoeinstellungen (kann angefordert werden über \'eu_inverter_support@huawei.com\')',
+        'ru': 'Настройки учетной записи (can be requested from \'eu_inverter_support@huawei.com\')',
+        'pt': 'Configurações de Conta (can be requested from \'eu_inverter_support@huawei.com\')',
+        'nl': 'Account instellingen (can be requested from \'eu_inverter_support@huawei.com\')',
+        'fr': 'Paramètres du compte (can be requested from \'eu_inverter_support@huawei.com\')',
+        'it': 'Impostazioni dell\'account (can be requested from \'eu_inverter_support@huawei.com\')',
+        'es': 'Configuraciones de la cuenta (can be requested from \'eu_inverter_support@huawei.com\')',
+        'pl': 'Ustawienia konta (can be requested from \'eu_inverter_support@huawei.com\')',
+        'zh-cn': ',帐号设定 (can be requested from \'eu_inverter_support@huawei.com\')'
     }
 };

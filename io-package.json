@@ -1,12 +1,16 @@
 {
     "common": {
         "name": "fusionsolar",
-        "version": "0.1.0",
+        "version": "0.2.0",
         "news": {
             "0.1.0": {
                 "en": "initial release",
                 "de": "Erstveröffentlichung"
-            }            
+            },
+            "0.2.0": {
+                "en": "login and inverter realtime KPI now working",
+                "de": "login und echtzeit KPIs des inverters funktionsfähig"
+            }
         },
         "title": "Huawei FusionSolar API",
         "titleLang": {

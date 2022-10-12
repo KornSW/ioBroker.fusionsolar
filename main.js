@@ -79,6 +79,7 @@ class FusionSolarConnector extends utils.Adapter {
 
     async readAllStates(isFirsttimeInit, errorCounter) {
         let nextPoll = polltime * 1000;
+        let firstTimeInitError = false;
 
         try {
 
@@ -99,24 +100,36 @@ class FusionSolarConnector extends utils.Adapter {
                 }
             }
 
-            if(isFirsttimeInit){
+            if(isFirsttimeInit || !stationList){
                 this.log.debug('initially loading StationList from the API...');
                 await this.getStationList().then((result) => stationList = result);
             }
 
-            stationList.forEach(stationInfo => {
-                this.log.debug('loading StationRealKpi from the API...');
-                this.getStationRealKpi(stationInfo.stationCode).then((stationRealtimeKpiData) => {
-                    this.log.debug('writing station related channel values...');
-                    this.writeStationDataToIoBrokerStates(stationInfo, stationRealtimeKpiData, isFirsttimeInit);
+            if(stationList){
+                stationList.forEach(stationInfo => {
+                    this.log.debug('Info: ' + JSON.stringify(stationInfo));
+
+                    this.log.debug('loading StationRealKpi from the API...');
+                    this.getStationRealKpi(stationInfo.stationCode).then((stationRealtimeKpiData) => {
+                        this.log.debug('KPI: ' + JSON.stringify(stationRealtimeKpiData));
+
+                        this.log.debug('writing station related channel values...');
+                        this.writeStationDataToIoBrokerStates(stationInfo, stationRealtimeKpiData, isFirsttimeInit);
+                    });
                 });
-            });
+            }
+            else{
+                this.log.debug('stationlist not present');
+                firstTimeInitError = true;
+            }
 
             this.log.debug('update completed');
             await this.setStateAsync('lastUpdate', new Date().toLocaleTimeString(), true);
 
             errorCounter = 0;
         } catch (error) {
+            firstTimeInitError = isFirsttimeInit;
+
             if (typeof error === 'string') {
                 if(error == 'API required re-login'){
                     this.log.info(error);
@@ -139,7 +152,7 @@ class FusionSolarConnector extends utils.Adapter {
             }
         }
 
-        adapterIntervals.readAllStates = setTimeout(this.readAllStates.bind(this, false, errorCounter), nextPoll);
+        adapterIntervals.readAllStates = setTimeout(this.readAllStates.bind(this, firstTimeInitError, errorCounter), nextPoll);
     }
 
     async writeChannelDataToIoBroker(channelParentPath, channelName, value, channelType, channelRole, createObjectInitally) {
@@ -165,21 +178,26 @@ class FusionSolarConnector extends utils.Adapter {
     }
 
     async writeStationDataToIoBrokerStates(stationInfo, stationRealtimeKpiData, createObjectsInitally) {
+        if(stationInfo){
 
-        await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'stationCode', stationInfo.stationCode, 'string', 'info.name',  createObjectsInitally);
-        await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'stationName', stationInfo.stationName, 'string', 'info.name',  createObjectsInitally);
-        await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'stationAddr', stationInfo.stationAddr, 'string', 'indicator',  createObjectsInitally);
-        await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'stationLinkman', stationInfo.stationLinkman, 'string', 'indicator',  createObjectsInitally);
-        await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'linkmanPho', stationInfo.linkmanPho, 'string', 'indicator',  createObjectsInitally);
-        await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'capacity', stationInfo.capacity, 'number', 'indicator',  createObjectsInitally);
-        await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'aidType', stationInfo.aidType, 'string', 'indicator',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'stationCode', stationInfo.stationCode, 'string', 'info.name',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'stationName', stationInfo.stationName, 'string', 'info.name',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'stationAddr', stationInfo.stationAddr, 'string', 'indicator',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'stationLinkman', stationInfo.stationLinkman, 'string', 'indicator',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'linkmanPho', stationInfo.linkmanPho, 'string', 'indicator',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'capacity', stationInfo.capacity, 'number', 'indicator',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'aidType', stationInfo.aidType, 'number', 'indicator',  createObjectsInitally);
 
-        await this.writeChannelDataToIoBroker(stationInfo.stationCode, '.kpi.realtime.totalIncome', stationRealtimeKpiData.total_income, 'number', 'indicator',  createObjectsInitally);
-        await this.writeChannelDataToIoBroker(stationInfo.stationCode, '.kpi.realtime.totalPower', stationRealtimeKpiData.total_power, 'number', 'indicator',  createObjectsInitally);
-        await this.writeChannelDataToIoBroker(stationInfo.stationCode, '.kpi.realtime.monthPower', stationRealtimeKpiData.month_power, 'number', 'indicator',  createObjectsInitally);
-        await this.writeChannelDataToIoBroker(stationInfo.stationCode, '.kpi.realtime.dayPower', stationRealtimeKpiData.day_power, 'number', 'indicator',  createObjectsInitally);
-        await this.writeChannelDataToIoBroker(stationInfo.stationCode, '.kpi.realtime.dayIncome', stationRealtimeKpiData.day_income, 'number', 'indicator',  createObjectsInitally);
-        await this.writeChannelDataToIoBroker(stationInfo.stationCode, '.kpi.realtime.realHealthState', stationRealtimeKpiData.real_health_state, 'number', 'indicator',  createObjectsInitally);
+            if(stationRealtimeKpiData) {
+                await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'kpi.realtime.totalIncome', stationRealtimeKpiData.total_income, 'number', 'indicator',  createObjectsInitally);
+                await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'kpi.realtime.totalPower', stationRealtimeKpiData.total_power, 'number', 'indicator',  createObjectsInitally);
+                await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'kpi.realtime.monthPower', stationRealtimeKpiData.month_power, 'number', 'indicator',  createObjectsInitally);
+                await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'kpi.realtime.dayPower', stationRealtimeKpiData.day_power, 'number', 'indicator',  createObjectsInitally);
+                await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'kpi.realtime.dayIncome', stationRealtimeKpiData.day_income, 'number', 'indicator',  createObjectsInitally);
+                await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'kpi.realtime.realHealthState', stationRealtimeKpiData.real_health_state, 'number', 'indicator',  createObjectsInitally);
+            }
+
+        }
 
     }
 
@@ -216,43 +234,63 @@ class FusionSolarConnector extends utils.Adapter {
                 userName: username,
                 systemCode: password
             });
-            const cookieHeaders = response.headers['Set-Cookie'];
-            if(!cookieHeaders){
-                throw 'no XSRF-TOKEN cookie provided';
-            }
-            const firstCookie = cookieHeaders.split(';')[0];
-            if(firstCookie.contains('XSRF-TOKEN=')){
-                accessToken = firstCookie.substring(11);
-                this.log.debug('TOKEN:' + accessToken);
+
+            const xsrfTokenHeader = response.headers['xsrf-token'];
+            if(xsrfTokenHeader){
+                accessToken = xsrfTokenHeader;
             }
             else{
-                throw 'no XSRF-TOKEN cookie provided';
+
+                const cookieHeaders = response.headers['Set-Cookie'];
+                if(!cookieHeaders){
+                    this.log.debug(JSON.stringify(response.headers));
+                    throw 'no XSRF-TOKEN cookie provided';
+                }
+                const firstCookie = cookieHeaders.split(';')[0];
+                if(firstCookie.contains('xsrf-token=')){
+                    accessToken = firstCookie.substring(11);
+                    this.log.debug('TOKEN:' + accessToken);
+                }
+                else{
+                    this.log.debug(JSON.stringify(response.headers));
+                    throw 'no XSRF-TOKEN cookie provided';
+                }
+
             }
+            this.log.debug('got token: ' + accessToken);
 
-            this.log.debug(JSON.stringify(response.data));
-
-            if(response.data != undefined){
-                if(response.data.failcode == undefined){
-                    throw 'response contains no valid body';
-                }
-                if(response.data.failcode > 0){
-                    throw `response contains 'failCode' ${response.data.failcode} ${response.data.message}`;
-                }
+            if(response.data.failCode == 0){
 
                 this.log.info('FusionSolar Api Login successful');
                 await this.setStateAsync('info.connection', true, true);
+
                 return true;
             }
             else {
-                throw 'response contains no valid body';
+                if(response.data.failCode > 0){
+                    throw 'FusionSolar Api Login returned failCode #' + response.data.failCode;
+                }
+                else{
+                    this.log.debug(JSON.stringify(response.data));
+                    throw 'response contains an invalid body';
+                }
             }
         } catch (error) {
-            this.log.error('Api login error - check Username and password');
             if (typeof error === 'string') {
                 this.log.error(error);
             } else if (error instanceof Error) {
+                if(error['response'].status > 0 ){
+                    const httpStatus = error['response'].status;
+                    this.log.error('HTTP ' + httpStatus);
+                    if(httpStatus == 403){
+                        this.log.info('Note: 403-errors from FusionSolar API can occour by server quota problems - please retry in this case!');
+                    }
+                }
                 this.log.error(error.message);
             }
+
+            this.log.error('Api login error - check Username and password');
+
             await this.setStateAsync('info.connection', false, true);
             return false;
         }
@@ -282,6 +320,11 @@ class FusionSolarConnector extends utils.Adapter {
                 loggedIn = false;
                 return {};
             }
+            else if(response.data.failCode > 0){
+                this.log.error('API returned failCode #' + response.data.failCode);
+                this.log.debug('Request was: ' + JSON.stringify(requestBody));
+                return {};
+            }
 
             return response.data.data;
             /*
@@ -309,9 +352,13 @@ class FusionSolarConnector extends utils.Adapter {
     }
 
     async getStationRealKpi(stationCode){
-        const requestBody =`{
+        /*const requestBody =`{
             "stationCodes": "${stationCode}"
-        }`;
+        }`;*/
+        const requestBody = {
+            stationCodes: stationCode
+        };
+
         return await axios.post(apiUrl + '/getStationRealKpi',
             requestBody,
             { headers: {'XSRF-TOKEN' : `${accessToken}`}
@@ -322,6 +369,11 @@ class FusionSolarConnector extends utils.Adapter {
             if(response.data.failCode == 305){
                 this.log.info('API requires re-logon!');
                 loggedIn = false;
+                return {};
+            }
+            else if(response.data.failCode > 0){
+                this.log.error('API returned failCode #' + response.data.failCode);
+                this.log.debug('Request was: ' + JSON.stringify(requestBody));
                 return {};
             }
 
@@ -344,7 +396,7 @@ class FusionSolarConnector extends utils.Adapter {
                 "success":true
             }
             */
-            return response.data.data;
+            return response.data.data[0].dataItemMap;
         }).catch((error) => {
             this.log.error(error);
         });
@@ -360,6 +412,18 @@ class FusionSolarConnector extends utils.Adapter {
             }).then(response => {
             this.log.debug(`loading DevList for station ${stationCode}`);
             this.log.debug(JSON.stringify(response.data));
+
+            if(response.data.failCode == 305){
+                this.log.info('API requires re-logon!');
+                loggedIn = false;
+                return [];
+            }
+            else if(response.data.failCode > 0){
+                this.log.error('API returned failCode #' + response.data.failCode);
+                this.log.debug('Request was: ' + requestBody);
+                return [];
+            }
+
             /*
             {
                 "data":[
@@ -435,6 +499,18 @@ class FusionSolarConnector extends utils.Adapter {
             }).then(response => {
             this.log.debug(`loading DevRealKpi for device ${deviceId} (type ${deviceTypeId})`);
             this.log.debug(JSON.stringify(response.data));
+
+            if(response.data.failCode == 305){
+                this.log.info('API requires re-logon!');
+                loggedIn = false;
+                return [];
+            }
+            else if(response.data.failCode > 0){
+                this.log.error('API returned failCode #' + response.data.failCode);
+                this.log.debug('Request was: ' + requestBody);
+                return [];
+            }
+
             /*
             *** für Dongle (devTypeId=62)
               [t.b.d.]
