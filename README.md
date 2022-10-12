@@ -5,16 +5,44 @@
 
 Adapter to connect to the Huawei 'Fusion Solar' cloud
 
+Build State: [![Build status](https://tobiaskorn.visualstudio.com/KornSW%20(OpenSource)/_apis/build/status/ioBroker.FusionSolar)](https://tobiaskorn.visualstudio.com/KornSW%20(OpenSource)/_build/latest?definitionId=44)
+
 ## Contributors wanted!
 
 I started this project because I needed it myself. In order to be able to offer a solution that is as complete as possible, I am happy about everyone who would like to help here! Please feel free to contact me...
 
-## Help
+## Help (installation)
 
-tbd
+  1. check out the [GitHub Releases](https://github.com/KornSW/ioBroker.FusionSolar/releases) page
+
+  2. right-click to the corresponding .tgz archive file and 'copy the link-address'
+
+  3. go to your ioBroker admin frontend
+
+  4. (if not done yet) enable expert mode in (in the ioBroker settings)
+
+  5. go to the 'Adapters' page
+
+  6. click on the GitHub-icon in the toolbar -> a dialog opens...
+
+  7. switch to the tab on the right side to enter a custom url
+
+  8. paste the address of the tgz file into the textbox
+
+  9. press the button below to let ioBroker download and register it
+
+  10. now the fusionsolar adapter should be in the collection -> select it
+
+  11. click on the '...' icon and on the '+' icon to create an instance
+
+  12. enter the credentials of your fusionsolar api account (if you don't have one, you can request one from: 'eu_inverter_support@huawei.com')
+
+  13. have fun (hopefully, if huawei hopefully makes the api a little bit more stable in future ;-)
+
 
 ## Changelog
-
+### 0.2.0
+* (KornSW) login and inverter realtime KPI now working
 ### 0.1.0
 * (KornSW) initial version (inspired by https://github.com/Newan/ioBroker.easee - thnx to Newan!)
 
