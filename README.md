@@ -13,31 +13,63 @@ I started this project because I needed it myself. In order to be able to offer 
 
 ## Help (installation)
 
-  1. check out the [GitHub Releases](https://github.com/KornSW/ioBroker.FusionSolar/releases) page
+  1. go to your ioBroker admin frontend
 
-  2. right-click to the corresponding .tgz archive file and 'copy the link-address'
+  2. (if not done yet) enable expert mode in (in the ioBroker settings)
 
-  3. go to your ioBroker admin frontend
+       ![image](doc/exp1.png)
 
-  4. (if not done yet) enable expert mode in (in the ioBroker settings)
+       here you'll find:
 
-  5. go to the 'Adapters' page
+       ![image](doc/exp2.png)
 
-  6. click on the GitHub-icon in the toolbar -> a dialog opens...
+       
 
-  7. switch to the tab on the right side to enter a custom url
+  3. go to the 'Adapters' page
 
-  8. paste the address of the tgz file into the textbox
+        
 
-  9. press the button below to let ioBroker download and register it
+  4. click on the GitHub-icon in the toolbar -> a dialog opens...
 
-  10. now the fusionsolar adapter should be in the collection -> select it
+       ![image](doc/ins1.png)
 
-  11. click on the '...' icon and on the '+' icon to create an instance
+       
 
-  12. enter the credentials of your fusionsolar api account (if you don't have one, you can request one from: 'eu_inverter_support@huawei.com')
+  5. switch to the tab on the center to select a GitHub source repository ans select "**undefined [KornSW]**"
 
-  13. have fun (hopefully, if huawei hopefully makes the api a little bit more stable in future ;-)
+          ![image](doc/ins2.png)
+
+
+
+>I dont know why currently the name is not displayed properly, but im sure that i can fix it in the near future....
+
+
+
+
+  6. press the 'install' button below to let ioBroker download and register it
+
+        
+
+  7. now the fusionsolar adapter should be in the collection -> select it
+
+          ![image](doc/ins3.png)
+
+  8. click on the '...' icon and on the '+' icon to create an instance
+          ![image](doc/ins4.png)
+
+        
+
+  9. enter the credentials of your fusionsolar api account
+
+        (if you don't have one, you can request one from: 'eu_inverter_support@huawei.com')
+
+        
+
+  10. have fun! ... hopefully*
+
+         ​	*if huawei hopefully makes the api a little bit more stable in future ; - there is currently a hard quota 	restriction which makes the querys extreemly flaky :-(
+
+         
 
 
 ## Changelog
