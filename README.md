@@ -17,47 +17,38 @@ I started this project because I needed it myself. In order to be able to offer 
 
   2. (if not done yet) enable expert mode in (in the ioBroker settings)
 
-       ![image](doc/exp1.png)
+![image](doc/exp1.png)
 
        here you'll find:
 
-       ![image](doc/exp2.png)
+![image](doc/exp2.png)
 
-       
 
   3. go to the 'Adapters' page
 
-        
+
 
   4. click on the GitHub-icon in the toolbar -> a dialog opens...
 
-       ![image](doc/ins1.png)
-
-       
+![image](doc/ins1.png)
 
   5. switch to the tab on the center to select a GitHub source repository ans select "**undefined [KornSW]**"
 
-          ![image](doc/ins2.png)
-
-
+![image](doc/ins2.png)
 
 >I dont know why currently the name is not displayed properly, but im sure that i can fix it in the near future....
 
 
-
-
   6. press the 'install' button below to let ioBroker download and register it
 
-        
 
   7. now the fusionsolar adapter should be in the collection -> select it
 
-          ![image](doc/ins3.png)
+![image](doc/ins3.png)
 
   8. click on the '...' icon and on the '+' icon to create an instance
-          ![image](doc/ins4.png)
 
-        
+![image](doc/ins4.png)
 
   9. enter the credentials of your fusionsolar api account
 
