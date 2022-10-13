@@ -1,7 +1,7 @@
 {
     "common": {
         "name": "fusionsolar",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "news": {
             "0.1.0": {
                 "en": "initial release",
@@ -10,6 +10,10 @@
             "0.2.0": {
                 "en": "login and inverter realtime KPI now working",
                 "de": "login und echtzeit KPIs des inverters funktionsfähig"
+            },
+            "0.3.0": {
+                "en": "added device related channels (now MVP candidate)",
+                "de": "gerätespezifische Kanäle ergänzt (MVP Kandidat)"
             }
         },
         "title": "Huawei FusionSolar API",
@@ -59,7 +63,7 @@
     "native": {
         "username": "",
         "client_secret": "",
-        "polltime": 60
+        "polltime": 180
     },
     "objects": [],
     "instanceObjects": [

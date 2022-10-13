@@ -41,6 +41,9 @@ I started this project because I needed it myself. In order to be able to offer 
 
 
 ## Changelog
+
+### 0.3.0
+* (KornSW) added device related channels (now MVP candidate)
 ### 0.2.0
 * (KornSW) login and inverter realtime KPI now working
 ### 0.1.0

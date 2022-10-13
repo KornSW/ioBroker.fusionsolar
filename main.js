@@ -1,6 +1,7 @@
 'use strict';
 
 const utils = require('@iobroker/adapter-core');
+//const { constants } = require('crypto');
 //const { request } = require('https');
 
 const axios = require('axios').default;
@@ -12,8 +13,9 @@ const adapterIntervals = {}; //halten von allen Intervallen
 const maxSubseqErrorsUntilSuspend = 10;
 
 let stationList = [];
+let deviceList = [];
 let accessToken = '';
-let polltime = 60;
+let polltime = 180;
 let loggedIn = false;
 
 class FusionSolarConnector extends utils.Adapter {
@@ -40,8 +42,9 @@ class FusionSolarConnector extends utils.Adapter {
 
         await this.setStateAsync('info.connection', false, true);
 
-        if (this.config.polltime < 1) {
-            this.log.error('Interval in seconds is to short -> go to default 60');
+        if (this.config.polltime < 60) {
+            this.log.error('Interval in seconds is to short (60 is minimum) -> using 180 now');
+            polltime = 180;
         } else {
             polltime = this.config.polltime;
         }
@@ -96,31 +99,64 @@ class FusionSolarConnector extends utils.Adapter {
                     loggedIn = true;
                 }
                 else{
-                    throw 'login failed!';
+                    throw 'FusionSolar Api Login failed!';
                 }
             }
 
             if(isFirsttimeInit || !stationList){
+                //await this.apiQuotaProtector();
+
                 this.log.debug('initially loading StationList from the API...');
                 await this.getStationList().then((result) => stationList = result);
             }
 
             if(stationList){
-                stationList.forEach(stationInfo => {
-                    this.log.debug('Info: ' + JSON.stringify(stationInfo));
+                //stationList.forEach(stationInfo => {
+                for(const stationInfo of stationList) {
+                    //await this.apiQuotaProtector();
+                    //this.log.debug('Info: ' + JSON.stringify(stationInfo));
 
-                    this.log.debug('loading StationRealKpi from the API...');
+                    this.log.debug('loading StationRealKpi for ' + stationInfo.stationCode + ' from the API...');
                     this.getStationRealKpi(stationInfo.stationCode).then((stationRealtimeKpiData) => {
-                        this.log.debug('KPI: ' + JSON.stringify(stationRealtimeKpiData));
+                        //this.log.debug('KPI: ' + JSON.stringify(stationRealtimeKpiData));
 
                         this.log.debug('writing station related channel values...');
-                        this.writeStationDataToIoBrokerStates(stationInfo, stationRealtimeKpiData, isFirsttimeInit);
+                        this.writeStationDataToIoBrokerStates(stationInfo, stationRealtimeKpiData, (isFirsttimeInit || errorCounter > 0));
+
                     });
-                });
+
+                    if(isFirsttimeInit){
+                        //await this.apiQuotaProtector();
+
+                        this.log.debug('initially loading DeviceList for ' + stationInfo.stationCode + ' from the API...');
+                        await this.getDevList(stationInfo.stationCode).then((result) => deviceList = result);
+                    }
+
+                    if(deviceList){
+                        for(const deviceInfo of deviceList) {
+                            //await this.apiQuotaProtector();
+
+                            this.log.debug('loading DevRealKpi for ' + deviceInfo.id + ' from the API...');
+                            this.getDevRealKpi(deviceInfo.id, deviceInfo.devTypeId).then((deviceRealtimeKpiData) => {
+                                //this.log.debug('DEV-KPI: ' + JSON.stringify(deviceRealtimeKpiData));
+
+                                this.log.debug('writing device related channel values for ' + deviceInfo.id + '...');
+                                this.writeDeviceDataToIoBrokerStates(deviceInfo, deviceRealtimeKpiData, (isFirsttimeInit || errorCounter > 0));
+                            });
+
+                        }
+                    }
+                    else{
+                        await this.apiQuotaProtector();
+                        throw 'DeviceList was not loaded properly';
+                    }
+
+                }//);
+
             }
             else{
-                this.log.debug('stationlist not present');
-                firstTimeInitError = true;
+                await this.apiQuotaProtector();
+                throw 'StationList was not loaded properly';
             }
 
             this.log.debug('update completed');
@@ -128,6 +164,7 @@ class FusionSolarConnector extends utils.Adapter {
 
             errorCounter = 0;
         } catch (error) {
+
             firstTimeInitError = isFirsttimeInit;
 
             if (typeof error === 'string') {
@@ -141,18 +178,26 @@ class FusionSolarConnector extends utils.Adapter {
             } else if (error instanceof Error) {
                 this.log.error(error.message);
             }
+
             errorCounter += 1;
             if (errorCounter >= maxSubseqErrorsUntilSuspend) {
-                this.log.info('ADAPTER IS NOW AUTOMATICALLY SUSPENDING ANY API QUERY FOR 24H!!!');
+                this.log.warn('ADAPTER IS NOW AUTOMATICALLY SUSPENDING ANY API QUERY FOR 24H!!!');
                 nextPoll = 86400000; //1D
             }
             else {
+                await this.apiQuotaProtector();
                 //SEC: 0,5 / 4 / 13,5 / 32 / 62 / ...
                 nextPoll = 500 * errorCounter * errorCounter * errorCounter;
             }
+
         }
 
         adapterIntervals.readAllStates = setTimeout(this.readAllStates.bind(this, firstTimeInitError, errorCounter), nextPoll);
+    }
+
+    async apiQuotaProtector() {
+        const sleepMs = 5000; //ITS A PITA!!! THE API RESPONDS 403 DUE QUOTA-RESTRICTIONS
+        return new Promise(resolve => setTimeout(resolve, sleepMs));
     }
 
     async writeChannelDataToIoBroker(channelParentPath, channelName, value, channelType, channelRole, createObjectInitally) {
@@ -180,21 +225,205 @@ class FusionSolarConnector extends utils.Adapter {
     async writeStationDataToIoBrokerStates(stationInfo, stationRealtimeKpiData, createObjectsInitally) {
         if(stationInfo){
 
-            await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'stationCode', stationInfo.stationCode, 'string', 'info.name',  createObjectsInitally);
-            await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'stationName', stationInfo.stationName, 'string', 'info.name',  createObjectsInitally);
-            await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'stationAddr', stationInfo.stationAddr, 'string', 'indicator',  createObjectsInitally);
-            await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'stationLinkman', stationInfo.stationLinkman, 'string', 'indicator',  createObjectsInitally);
-            await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'linkmanPho', stationInfo.linkmanPho, 'string', 'indicator',  createObjectsInitally);
-            await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'capacity', stationInfo.capacity, 'number', 'indicator',  createObjectsInitally);
-            await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'aidType', stationInfo.aidType, 'number', 'indicator',  createObjectsInitally);
+            const stationFolder = stationInfo.stationCode;
+            await this.writeChannelDataToIoBroker(stationFolder, 'stationCode', stationInfo.stationCode, 'string', 'info.name',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(stationFolder, 'stationName', stationInfo.stationName, 'string', 'info.name',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(stationFolder, 'stationAddr', stationInfo.stationAddr, 'string', 'indicator',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(stationFolder, 'stationLinkman', stationInfo.stationLinkman, 'string', 'indicator',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(stationFolder, 'linkmanPho', stationInfo.linkmanPho, 'string', 'indicator',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(stationFolder, 'capacity', stationInfo.capacity, 'number', 'indicator',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(stationFolder, 'aidType', stationInfo.aidType, 'number', 'indicator',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(stationFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);
 
             if(stationRealtimeKpiData) {
-                await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'kpi.realtime.totalIncome', stationRealtimeKpiData.total_income, 'number', 'indicator',  createObjectsInitally);
-                await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'kpi.realtime.totalPower', stationRealtimeKpiData.total_power, 'number', 'indicator',  createObjectsInitally);
-                await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'kpi.realtime.monthPower', stationRealtimeKpiData.month_power, 'number', 'indicator',  createObjectsInitally);
-                await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'kpi.realtime.dayPower', stationRealtimeKpiData.day_power, 'number', 'indicator',  createObjectsInitally);
-                await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'kpi.realtime.dayIncome', stationRealtimeKpiData.day_income, 'number', 'indicator',  createObjectsInitally);
-                await this.writeChannelDataToIoBroker(stationInfo.stationCode, 'kpi.realtime.realHealthState', stationRealtimeKpiData.real_health_state, 'number', 'indicator',  createObjectsInitally);
+                const stationRealtimeKpiFolder = stationFolder + '.kpi.realtime';
+                await this.writeChannelDataToIoBroker(stationRealtimeKpiFolder, 'totalIncome', stationRealtimeKpiData.total_income, 'number', 'indicator',  createObjectsInitally);
+                await this.writeChannelDataToIoBroker(stationRealtimeKpiFolder, 'totalPower', stationRealtimeKpiData.total_power, 'number', 'indicator',  createObjectsInitally);
+                await this.writeChannelDataToIoBroker(stationRealtimeKpiFolder, 'monthPower', stationRealtimeKpiData.month_power, 'number', 'indicator',  createObjectsInitally);
+                await this.writeChannelDataToIoBroker(stationRealtimeKpiFolder, 'dayPower', stationRealtimeKpiData.day_power, 'number', 'indicator',  createObjectsInitally);
+                await this.writeChannelDataToIoBroker(stationRealtimeKpiFolder, 'dayIncome', stationRealtimeKpiData.day_income, 'number', 'indicator',  createObjectsInitally);
+                await this.writeChannelDataToIoBroker(stationRealtimeKpiFolder, 'realHealthState', stationRealtimeKpiData.real_health_state, 'number', 'indicator',  createObjectsInitally);
+                await this.writeChannelDataToIoBroker(stationRealtimeKpiFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);
+            }
+
+        }
+
+    }
+
+    async writeDeviceDataToIoBrokerStates(deviceInfo, deviceRealtimeKpiData, createObjectsInitally) {
+        if(deviceInfo){
+
+            const deviceFolder = deviceInfo.stationCode + '.' + deviceInfo.id;
+            await this.writeChannelDataToIoBroker(deviceFolder, 'id', deviceInfo.id, 'number', 'indicator',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(deviceFolder, 'devName', deviceInfo.devName, 'string', 'info.name',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(deviceFolder, 'devTypeId', deviceInfo.devTypeId, 'number', 'info.name',  createObjectsInitally);
+            if(createObjectsInitally){
+                if(deviceInfo.devTypeId == 1){
+                    await this.writeChannelDataToIoBroker(deviceFolder, 'devTypeDesc', 'Inverter', 'string', 'info.name',  createObjectsInitally);
+                }
+                else if(deviceInfo.devTypeId == 62){
+                    await this.writeChannelDataToIoBroker(deviceFolder, 'devTypeDesc', 'Dongle', 'string', 'info.name',  createObjectsInitally);
+                }
+                else if(deviceInfo.devTypeId == 47){
+                    await this.writeChannelDataToIoBroker(deviceFolder, 'devTypeDesc', 'Meter', 'string', 'info.name',  createObjectsInitally);
+                }
+                else if(deviceInfo.devTypeId == 39){
+                    await this.writeChannelDataToIoBroker(deviceFolder, 'devTypeDesc', 'Battery', 'string', 'info.name',  createObjectsInitally);
+                }
+                else {
+                    await this.writeChannelDataToIoBroker(deviceFolder, 'devTypeDesc', 'Unknown', 'string', 'info.name',  createObjectsInitally);
+                }
+            }
+            await this.writeChannelDataToIoBroker(deviceFolder, 'esnCode', deviceInfo.esnCode, 'string', 'info.name',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(deviceFolder, 'invType', deviceInfo.invType, 'string', 'indicator',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(deviceFolder, 'latitude', deviceInfo.latitude, 'number', 'indicator',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(deviceFolder, 'longitude', deviceInfo.longitude, 'number', 'indicator',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(deviceFolder, 'optimizerNumber', deviceInfo.optimizerNumber, 'number', 'indicator',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(deviceFolder, 'softwareVersion', deviceInfo.softwareVersion, 'string', 'indicator',  createObjectsInitally);
+            //await this.writeChannelDataToIoBroker(deviceFolder, 'stationCode', deviceInfo.stationCode, 'string', 'indicator',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(deviceFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);
+
+            if(deviceRealtimeKpiData) {
+
+                const deviceRealtimeKpiFolder = deviceFolder + '.kpi.realtime';
+                if(deviceInfo.devTypeId == 1){
+                    //Inverter
+
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'openTime', deviceRealtimeKpiData.open_time, 'mixed', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'closeTime', deviceRealtimeKpiData.close_time, 'mixed', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'activePower', deviceRealtimeKpiData.active_power, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'reactivePower', deviceRealtimeKpiData.reactive_power, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'powerFactor', deviceRealtimeKpiData.power_factor, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'runState', deviceRealtimeKpiData.run_state, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'inverterState', deviceRealtimeKpiData.inverter_state, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'efficiency', deviceRealtimeKpiData.efficiency, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'temperature', deviceRealtimeKpiData.temperature, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'elecFreq', deviceRealtimeKpiData.elec_freq, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'dayCap', deviceRealtimeKpiData.day_cap, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'totalCap', deviceRealtimeKpiData.total_cap, 'number', 'indicator',  createObjectsInitally);
+
+                    //STROM PRO PHASE
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.AC', 'aI', deviceRealtimeKpiData.a_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.AC', 'bI', deviceRealtimeKpiData.b_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.AC', 'cI', deviceRealtimeKpiData.c_i, 'number', 'indicator',  createObjectsInitally);
+
+                    //SPANNUNG PRO PHASE
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.AC', 'aU', deviceRealtimeKpiData.a_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.AC', 'bU', deviceRealtimeKpiData.b_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.AC', 'cU', deviceRealtimeKpiData.c_u, 'number', 'indicator',  createObjectsInitally);
+
+                    //SPANNUNG ZWISCHEN PHASEN
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.AC', 'abU', deviceRealtimeKpiData.ab_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.AC', 'bcU', deviceRealtimeKpiData.bc_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.AC', 'caU', deviceRealtimeKpiData.ca_u, 'number', 'indicator',  createObjectsInitally);
+
+                    //CAPTURE-LEISTUNG PRO MPPT
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.MPPT', 'mpptPower', deviceRealtimeKpiData.mppt_power, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.MPPT', 'mpptTotalCap', deviceRealtimeKpiData.mppt_total_cap, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.MPPT', 'mppt01Cap', deviceRealtimeKpiData.mppt_1_cap, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.MPPT', 'mppt02Cap', deviceRealtimeKpiData.mppt_2_cap, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.MPPT', 'mppt03Cap', deviceRealtimeKpiData.mppt_3_cap, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.MPPT', 'mppt04Cap', deviceRealtimeKpiData.mppt_4_cap, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.MPPT', 'mppt05Cap', deviceRealtimeKpiData.mppt_5_cap, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.MPPT', 'mppt06Cap', deviceRealtimeKpiData.mppt_6_cap, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.MPPT', 'mppt07Cap', deviceRealtimeKpiData.mppt_7_cap, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.MPPT', 'mppt08Cap', deviceRealtimeKpiData.mppt_8_cap, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.MPPT', 'mppt09Cap', deviceRealtimeKpiData.mppt_9_cap, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.MPPT', 'mppt10Cap', deviceRealtimeKpiData.mppt_10_cap, 'number', 'indicator',  createObjectsInitally);
+
+                    //SPANNUNG UND STROM PRO STRING
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv01u', deviceRealtimeKpiData.pv1_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv01i', deviceRealtimeKpiData.pv1_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv02u', deviceRealtimeKpiData.pv2_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv02i', deviceRealtimeKpiData.pv2_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv03u', deviceRealtimeKpiData.pv3_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv03i', deviceRealtimeKpiData.pv3_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv04u', deviceRealtimeKpiData.pv4_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv04i', deviceRealtimeKpiData.pv4_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv05u', deviceRealtimeKpiData.pv5_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv05i', deviceRealtimeKpiData.pv5_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv06u', deviceRealtimeKpiData.pv6_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv06i', deviceRealtimeKpiData.pv6_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv07u', deviceRealtimeKpiData.pv7_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv07i', deviceRealtimeKpiData.pv7_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv08u', deviceRealtimeKpiData.pv8_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv08i', deviceRealtimeKpiData.pv8_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv09u', deviceRealtimeKpiData.pv9_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv09i', deviceRealtimeKpiData.pv9_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv10u', deviceRealtimeKpiData.pv10_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv10i', deviceRealtimeKpiData.pv10_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv11u', deviceRealtimeKpiData.pv11_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv11i', deviceRealtimeKpiData.pv11_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv12u', deviceRealtimeKpiData.pv12_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv12i', deviceRealtimeKpiData.pv12_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv13u', deviceRealtimeKpiData.pv13_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv13i', deviceRealtimeKpiData.pv13_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv14u', deviceRealtimeKpiData.pv14_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv14i', deviceRealtimeKpiData.pv14_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv15u', deviceRealtimeKpiData.pv15_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv15i', deviceRealtimeKpiData.pv15_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv16u', deviceRealtimeKpiData.pv16_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv16i', deviceRealtimeKpiData.pv16_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv17u', deviceRealtimeKpiData.pv17_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv17i', deviceRealtimeKpiData.pv17_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv18u', deviceRealtimeKpiData.pv18_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv18i', deviceRealtimeKpiData.pv18_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv19u', deviceRealtimeKpiData.pv19_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv19i', deviceRealtimeKpiData.pv19_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv20u', deviceRealtimeKpiData.pv20_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv20i', deviceRealtimeKpiData.pv20_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv21u', deviceRealtimeKpiData.pv21_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv21i', deviceRealtimeKpiData.pv21_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv22u', deviceRealtimeKpiData.pv22_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv22i', deviceRealtimeKpiData.pv22_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv23u', deviceRealtimeKpiData.pv23_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv23i', deviceRealtimeKpiData.pv23_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv24u', deviceRealtimeKpiData.pv24_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder + '.PV', 'pv24i', deviceRealtimeKpiData.pv24_i, 'number', 'indicator',  createObjectsInitally);
+
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);
+
+                }
+                else if(deviceInfo.devTypeId == 62){
+                    //Dongle
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);
+                }
+                else if(deviceInfo.devTypeId == 47){
+                    //Meter
+
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'runState', deviceRealtimeKpiData.run_state, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'meterStatus', deviceRealtimeKpiData.meter_status, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'meterU', deviceRealtimeKpiData.meter_u, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'meterI', deviceRealtimeKpiData.meter_i, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'activeCap', deviceRealtimeKpiData.active_cap, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'reverseActiveCap', deviceRealtimeKpiData.reverse_active_cap, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'powerFactor', deviceRealtimeKpiData.power_factor, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'activePower', deviceRealtimeKpiData.active_power, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'reactivePower', deviceRealtimeKpiData.reactive_power, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'gridFrequency', deviceRealtimeKpiData.grid_frequency, 'number', 'indicator',  createObjectsInitally);
+
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);
+
+                }
+                else if(deviceInfo.devTypeId == 39){
+                    //Battery
+
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'runState', deviceRealtimeKpiData.run_state, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'batteryStatus', deviceRealtimeKpiData.battery_status, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'batterySoh', deviceRealtimeKpiData.battery_soh, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'batterySoc', deviceRealtimeKpiData.battery_soc, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'maxChargePower', deviceRealtimeKpiData.max_charge_power, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'maxDischargePower', deviceRealtimeKpiData.max_discharge_power, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'chargeCap', deviceRealtimeKpiData.charge_cap, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'dischargeCap', deviceRealtimeKpiData.discharge_cap, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'chDischargePower', deviceRealtimeKpiData.ch_discharge_power, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'chDischargeModel', deviceRealtimeKpiData.ch_discharge_model, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'busbarU', deviceRealtimeKpiData.busbar_u, 'number', 'indicator',  createObjectsInitally);
+
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);
+
+                }
+
             }
 
         }
@@ -304,7 +533,8 @@ class FusionSolarConnector extends utils.Adapter {
         }
     */
 
-    async getStationList(){
+    async getStationList(retry=0){
+        await this.apiQuotaProtector();
         const requestBody =`{
 
         }`;
@@ -318,12 +548,16 @@ class FusionSolarConnector extends utils.Adapter {
             if(response.data.failCode == 305){
                 this.log.info('API requires re-logon!');
                 loggedIn = false;
-                return {};
+                return null;
+            }
+            else if(response.data.failCode == 407){
+                this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
+                return null;
             }
             else if(response.data.failCode > 0){
                 this.log.error('API returned failCode #' + response.data.failCode);
                 this.log.debug('Request was: ' + JSON.stringify(requestBody));
-                return {};
+                return null;
             }
 
             return response.data.data;
@@ -347,11 +581,17 @@ class FusionSolarConnector extends utils.Adapter {
             }
             */
         }).catch((error) => {
-            this.log.error(error);
+            if(this.shouldRetryAfterQuotaError(error, retry)){
+                return this.getStationList(retry+1);
+            }
+            else{
+                return null;
+            }
         });
     }
 
-    async getStationRealKpi(stationCode){
+    async getStationRealKpi(stationCode, retry=0){
+        await this.apiQuotaProtector();
         /*const requestBody =`{
             "stationCodes": "${stationCode}"
         }`;*/
@@ -369,6 +609,10 @@ class FusionSolarConnector extends utils.Adapter {
             if(response.data.failCode == 305){
                 this.log.info('API requires re-logon!');
                 loggedIn = false;
+                return {};
+            }
+            else if(response.data.failCode == 407){
+                this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
                 return {};
             }
             else if(response.data.failCode > 0){
@@ -398,14 +642,20 @@ class FusionSolarConnector extends utils.Adapter {
             */
             return response.data.data[0].dataItemMap;
         }).catch((error) => {
-            this.log.error(error);
+            if(this.shouldRetryAfterQuotaError(error, retry)){
+                return this.getStationRealKpi(stationCode, retry+1);
+            }
+            else{
+                return null;
+            }
         });
     }
 
-    async getDevList(stationCode){
-        const requestBody =`{
-            "stationCodes": "${stationCode}"
-        }`;
+    async getDevList(stationCode, retry=0){
+        await this.apiQuotaProtector();
+        const requestBody = {
+            stationCodes: stationCode
+        };
         return await axios.post(apiUrl + '/getDevList',
             requestBody,
             { headers: {'XSRF-TOKEN' : `${accessToken}`}
@@ -416,12 +666,16 @@ class FusionSolarConnector extends utils.Adapter {
             if(response.data.failCode == 305){
                 this.log.info('API requires re-logon!');
                 loggedIn = false;
-                return [];
+                return null;
+            }
+            else if(response.data.failCode == 407){
+                this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
+                return null;
             }
             else if(response.data.failCode > 0){
                 this.log.error('API returned failCode #' + response.data.failCode);
                 this.log.debug('Request was: ' + requestBody);
-                return [];
+                return null;
             }
 
             /*
@@ -484,15 +738,21 @@ class FusionSolarConnector extends utils.Adapter {
             */
             return response.data.data;
         }).catch((error) => {
-            this.log.error(error);
+            if(this.shouldRetryAfterQuotaError(error, retry)){
+                return this.getDevList(stationCode, retry+1);
+            }
+            else{
+                return null;
+            }
         });
     }
 
-    async getDevRealKpi(deviceId, deviceTypeId){
-        const requestBody =`{
-            "devIds": "${deviceId}",
-            "devTypeId": "${deviceTypeId}"
-        }`;
+    async getDevRealKpi(deviceId, deviceTypeId, retry=0){
+        await this.apiQuotaProtector();
+        const requestBody = {
+            devIds: deviceId,
+            devTypeId: deviceTypeId
+        };
         return await axios.post(apiUrl + '/getDevRealKpi',
             requestBody,
             { headers: {'XSRF-TOKEN' : `${accessToken}`}
@@ -503,19 +763,135 @@ class FusionSolarConnector extends utils.Adapter {
             if(response.data.failCode == 305){
                 this.log.info('API requires re-logon!');
                 loggedIn = false;
-                return [];
+                return {};
+            }
+            else if(response.data.failCode == 407){
+                this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
+                return {};
             }
             else if(response.data.failCode > 0){
                 this.log.error('API returned failCode #' + response.data.failCode);
                 this.log.debug('Request was: ' + requestBody);
-                return [];
+                return {};
             }
 
             /*
             *** für Dongle (devTypeId=62)
-              [t.b.d.]
+            {
+              "data": [
+                {
+                  "devId": 1000000035436845,
+                  "dataItemMap": {}
+                }
+              ],
+              "failCode": 0,
+              "message": null,
+              "params": {
+                "currentTime": 1665646265924,
+                "devIds": "1000000035436845",
+                "devTypeId": 62
+              },
+              "success": true
+            }
             *** für Inverter (devTypeId=1)
-              [t.b.d.]
+            {
+              "data": [
+                {
+                  "devId": 1000000035436846,
+                  "dataItemMap": {
+                    "pv2_u": 350.4,
+                    "pv4_u": 0.0,
+                    "pv22_i": 0.0,
+                    "pv6_u": 0.0,
+                    "power_factor": 1.0,
+                    "mppt_total_cap": 1501.37,
+                    "pv24_i": 0.0,
+                    "pv8_u": 0.0,
+                    "open_time": 1665642954000,
+                    "pv22_u": 0.0,
+                    "a_i": 0.307,
+                    "pv24_u": 0.0,
+                    "mppt_9_cap": 0.0,
+                    "c_i": 0.3,
+                    "pv20_u": 0.0,
+                    "pv19_u": 0.0,
+                    "pv15_u": 0.0,
+                    "pv17_u": 0.0,
+                    "reactive_power": 0.0,
+                    "a_u": 227.8,
+                    "c_u": 229.4,
+                    "mppt_8_cap": 0.0,
+                    "pv20_i": 0.0,
+                    "pv15_i": 0.0,
+                    "pv17_i": 0.0,
+                    "efficiency": 100.0,
+                    "pv11_i": 0.0,
+                    "pv13_i": 0.0,
+                    "pv11_u": 0.0,
+                    "pv13_u": 0.0,
+                    "mppt_power": 0.18,
+                    "run_state": 1,
+                    "close_time": "N/A",
+                    "pv19_i": 0.0,
+                    "mppt_7_cap": 0.0,
+                    "mppt_5_cap": 0.0,
+                    "pv2_i": 0.26,
+                    "pv4_i": 0.0,
+                    "active_power": 0.18,
+                    "pv6_i": 0.0,
+                    "pv8_i": 0.0,
+                    "mppt_6_cap": 0.0,
+                    "pv1_u": 429.2,
+                    "pv3_u": 0.0,
+                    "pv23_i": 0.0,
+                    "pv5_u": 0.0,
+                    "pv7_u": 0.0,
+                    "pv23_u": 0.0,
+                    "pv9_u": 0.0,
+                    "inverter_state": 512.0,
+                    "total_cap": 1380.5,
+                    "mppt_3_cap": 0.0,
+                    "b_i": 0.308,
+                    "pv21_u": 0.0,
+                    "mppt_10_cap": 0.0,
+                    "pv16_u": 0.0,
+                    "pv18_u": 0.0,
+                    "temperature": 45.0,
+                    "b_u": 227.4,
+                    "bc_u": 395.7,
+                    "pv21_i": 0.0,
+                    "elec_freq": 50.01,
+                    "mppt_4_cap": 0.0,
+                    "pv16_i": 0.0,
+                    "pv18_i": 0.0,
+                    "day_cap": 1.48,
+                    "pv12_i": 0.0,
+                    "pv14_i": 0.0,
+                    "pv12_u": 0.0,
+                    "mppt_1_cap": 897.77,
+                    "pv14_u": 0.0,
+                    "pv10_u": 0.0,
+                    "pv1_i": 0.3,
+                    "pv3_i": 0.0,
+                    "mppt_2_cap": 603.6,
+                    "pv5_i": 0.0,
+                    "ca_u": 395.8,
+                    "ab_u": 394.2,
+                    "pv7_i": 0.0,
+                    "pv10_i": 0.0,
+                    "pv9_i": 0.0
+                  }
+                }
+              ],
+              "failCode": 0,
+              "message": null,
+              "params": {
+                "currentTime": 1665646198532,
+                "devIds": "1000000035436846",
+                "devTypeId": 1
+              },
+              "success": true
+            }
             *** für Messgerät (devTypeId=47)
             {
                 "data":[{
@@ -562,10 +938,35 @@ class FusionSolarConnector extends utils.Adapter {
                 "success":true
             }
             */
-            return response.data.data;
+            return response.data.data[0].dataItemMap;
         }).catch((error) => {
-            this.log.error(error);
+            if(this.shouldRetryAfterQuotaError(error, retry)){
+                return this.getDevRealKpi(deviceId, deviceTypeId, retry+1);
+            }
+            else{
+                return null;
+            }
         });
+    }
+
+    shouldRetryAfterQuotaError(error, retry){
+        let errorMsg = error;
+        if (error instanceof Error) {
+            errorMsg = error.message;
+        }
+        if(errorMsg.indexOf('403') > 0){
+            if(retry > 3){
+                this.log.error('API returned httpCode #403 (quota issue on huawei side) - giving up now :-(');
+                return false;
+            }
+            this.log.warn('API returned httpCode #403 (quota issue on huawei side) - doing retry...');
+            return true;
+        }
+        else{
+            //throw error;
+            this.log.error(errorMsg);
+        }
+        return false;
     }
 
 }
