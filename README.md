@@ -56,15 +56,16 @@ I started this project because I needed it myself. In order to be able to offer 
 
         
 
-  10. have fun! ... hopefully*
+  10. have fun!
 
-         ​	*if huawei hopefully makes the api a little bit more stable in future ; - there is currently a hard quota 	restriction which makes the querys extreemly flaky :-(
+## @Huawei
 
-         
-
+Unfortunately i have to say that the api feels relatively unstable. Above all, dealing with the numerous quota restrictions and different error endings can only be managed by senior developers. I hope that this is not an experiment, and that you will continue to further develop the api. Otherwise my work was unfortunately in vain. There is a large community with the need of a working api.
+It would also be nice, if you could check why the returned values sometimes deviate from those in your app (sometimes so much that it cannot be a matter of a time lag).
 
 ## Changelog
-
+### 1.0.0
+* (KornSW) MVP level reached after some fixes regarding automatic async retries
 ### 0.3.0
 * (KornSW) added device related channels (now MVP candidate)
 ### 0.2.0

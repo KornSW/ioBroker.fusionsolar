@@ -1,19 +1,23 @@
 {
     "common": {
         "name": "fusionsolar",
-        "version": "0.3.0",
+        "version": "1.0.0",
         "news": {
-            "0.1.0": {
-                "en": "initial release",
-                "de": "Erstveröffentlichung"
+            "1.0.0": {
+                "en": "MVP level reached after some fixes regarding automatic async retries",
+                "de": "MVP Status erreicht, nach fixes bzgl. autom retry"
+            },
+            "0.3.0": {
+                "en": "added device related channels (now MVP candidate)",
+                "de": "gerätespezifische Kanäle ergänzt (MVP Kandidat)"
             },
             "0.2.0": {
                 "en": "login and inverter realtime KPI now working",
                 "de": "login und echtzeit KPIs des inverters funktionsfähig"
             },
-            "0.3.0": {
-                "en": "added device related channels (now MVP candidate)",
-                "de": "gerätespezifische Kanäle ergänzt (MVP Kandidat)"
+            "0.1.0": {
+                "en": "initial release",
+                "de": "Erstveröffentlichung"
             }
         },
         "title": "Huawei FusionSolar API",
@@ -29,18 +33,15 @@
             "KornSW"
         ],
         "keywords": [
-            "Huawei",
-            "FusionSolar",
-            "SUN2000",
-            "pv"
+            "Huawei FusionSolar SUN2000 pv"
         ],
         "license": "MIT",
         "platform": "Javascript/Node.js",
         "main": "main.js",
         "icon": "sun2000.png",
         "enabled": true,
-        "extIcon": "https://raw.githubusercontent.com/KornSW/ioBroker.FusionSolar/master/admin/sun2000.png",
-        "readme": "https://github.com/KornSW/ioBroker.FusionSolar/blob/master/README.md",
+        "extIcon": "https://raw.githubusercontent.com/KornSW/ioBroker.fusionsolar/master/admin/sun2000.png",
+        "readme": "https://github.com/KornSW/ioBroker.fusionsolar/blob/master/README.md",
         "loglevel": "info",
         "mode": "daemon",
         "type": "energy",
@@ -56,10 +57,10 @@
     },
     "protectedNative": [
         "client_secret"
-      ],
+    ],
     "encryptedNative": [
         "client_secret"
-      ],    
+    ],    
     "native": {
         "username": "",
         "client_secret": "",

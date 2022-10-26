@@ -1,11 +1,11 @@
 'use strict';
 
 const utils = require('@iobroker/adapter-core');
+const axios = require('axios').default;
+
 //const { constants } = require('crypto');
 //const { request } = require('https');
-
-const axios = require('axios').default;
-const objEnum = require('./lib/enum.js');
+//const objEnum = require('./lib/enum.js');
 
 const apiUrl = 'https://eu5.fusionsolar.huawei.com/thirdData';
 const adapterIntervals = {}; //halten von allen Intervallen
@@ -34,8 +34,7 @@ class FusionSolarConnector extends utils.Adapter {
         this.on('stateChange', this.onStateChange.bind(this));
         this.on('unload', this.onUnload.bind(this));
 
-        //dummy call
-        objEnum.getValue();
+        //objEnum.getValue();
     }
 
     async onReady() {
@@ -103,43 +102,31 @@ class FusionSolarConnector extends utils.Adapter {
                 }
             }
 
-            if(isFirsttimeInit || !stationList){
-                //await this.apiQuotaProtector();
-
+            if(isFirsttimeInit || !stationList) {
                 this.log.debug('initially loading StationList from the API...');
                 await this.getStationList().then((result) => stationList = result);
             }
 
             if(stationList){
-                //stationList.forEach(stationInfo => {
+
                 for(const stationInfo of stationList) {
-                    //await this.apiQuotaProtector();
-                    //this.log.debug('Info: ' + JSON.stringify(stationInfo));
 
                     this.log.debug('loading StationRealKpi for ' + stationInfo.stationCode + ' from the API...');
-                    this.getStationRealKpi(stationInfo.stationCode).then((stationRealtimeKpiData) => {
-                        //this.log.debug('KPI: ' + JSON.stringify(stationRealtimeKpiData));
-
+                    await this.getStationRealKpi(stationInfo.stationCode).then((stationRealtimeKpiData) => {
                         this.log.debug('writing station related channel values...');
                         this.writeStationDataToIoBrokerStates(stationInfo, stationRealtimeKpiData, (isFirsttimeInit || errorCounter > 0));
-
                     });
 
-                    if(isFirsttimeInit){
-                        //await this.apiQuotaProtector();
-
+                    if(isFirsttimeInit) {
                         this.log.debug('initially loading DeviceList for ' + stationInfo.stationCode + ' from the API...');
                         await this.getDevList(stationInfo.stationCode).then((result) => deviceList = result);
                     }
 
                     if(deviceList){
                         for(const deviceInfo of deviceList) {
-                            //await this.apiQuotaProtector();
 
                             this.log.debug('loading DevRealKpi for ' + deviceInfo.id + ' from the API...');
-                            this.getDevRealKpi(deviceInfo.id, deviceInfo.devTypeId).then((deviceRealtimeKpiData) => {
-                                //this.log.debug('DEV-KPI: ' + JSON.stringify(deviceRealtimeKpiData));
-
+                            await this.getDevRealKpi(deviceInfo.id, deviceInfo.devTypeId).then((deviceRealtimeKpiData) => {
                                 this.log.debug('writing device related channel values for ' + deviceInfo.id + '...');
                                 this.writeDeviceDataToIoBrokerStates(deviceInfo, deviceRealtimeKpiData, (isFirsttimeInit || errorCounter > 0));
                             });
@@ -151,7 +138,7 @@ class FusionSolarConnector extends utils.Adapter {
                         throw 'DeviceList was not loaded properly';
                     }
 
-                }//);
+                }
 
             }
             else{
@@ -196,7 +183,7 @@ class FusionSolarConnector extends utils.Adapter {
     }
 
     async apiQuotaProtector() {
-        const sleepMs = 5000; //ITS A PITA!!! THE API RESPONDS 403 DUE QUOTA-RESTRICTIONS
+        const sleepMs = 3000; //ITS A PITA!!! THE API RESPONDS 403 DUE QUOTA-RESTRICTIONS
         return new Promise(resolve => setTimeout(resolve, sleepMs));
     }
 
@@ -538,7 +525,7 @@ class FusionSolarConnector extends utils.Adapter {
         const requestBody =`{
 
         }`;
-        return await axios.post(apiUrl + '/getStationList',
+        const result = await axios.post(apiUrl + '/getStationList',
             requestBody,
             { headers: {'XSRF-TOKEN' : `${accessToken}`}
             }).then(response => {
@@ -582,12 +569,21 @@ class FusionSolarConnector extends utils.Adapter {
             */
         }).catch((error) => {
             if(this.shouldRetryAfterQuotaError(error, retry)){
-                return this.getStationList(retry+1);
+                return retry;
             }
             else{
                 return null;
             }
         });
+
+        //if a number is returned, then it is the retry-counter
+        //with the sematic, that anoter retry should be done
+        if (result != null && Number.isInteger(result)) {
+            const nextTry = (result + 1);
+            return await this.getStationList(nextTry);
+        }
+
+        return result;
     }
 
     async getStationRealKpi(stationCode, retry=0){
@@ -599,7 +595,7 @@ class FusionSolarConnector extends utils.Adapter {
             stationCodes: stationCode
         };
 
-        return await axios.post(apiUrl + '/getStationRealKpi',
+        const result = await axios.post(apiUrl + '/getStationRealKpi',
             requestBody,
             { headers: {'XSRF-TOKEN' : `${accessToken}`}
             }).then(response => {
@@ -640,15 +636,25 @@ class FusionSolarConnector extends utils.Adapter {
                 "success":true
             }
             */
+
             return response.data.data[0].dataItemMap;
         }).catch((error) => {
             if(this.shouldRetryAfterQuotaError(error, retry)){
-                return this.getStationRealKpi(stationCode, retry+1);
+                return retry;
             }
             else{
                 return null;
             }
         });
+
+        //if a number is returned, then it is the retry-counter
+        //with the sematic, that anoter retry should be done
+        if (result != null && Number.isInteger(result)) {
+            const nextTry = (result + 1);
+            return await this.getStationRealKpi(stationCode, nextTry);
+        }
+
+        return result;
     }
 
     async getDevList(stationCode, retry=0){
@@ -656,7 +662,7 @@ class FusionSolarConnector extends utils.Adapter {
         const requestBody = {
             stationCodes: stationCode
         };
-        return await axios.post(apiUrl + '/getDevList',
+        const result = await axios.post(apiUrl + '/getDevList',
             requestBody,
             { headers: {'XSRF-TOKEN' : `${accessToken}`}
             }).then(response => {
@@ -739,12 +745,21 @@ class FusionSolarConnector extends utils.Adapter {
             return response.data.data;
         }).catch((error) => {
             if(this.shouldRetryAfterQuotaError(error, retry)){
-                return this.getDevList(stationCode, retry+1);
+                return retry;
             }
             else{
                 return null;
             }
         });
+
+        //if a number is returned, then it is the retry-counter
+        //with the sematic, that anoter retry should be done
+        if (result != null && Number.isInteger(result)) {
+            const nextTry = (result + 1);
+            return await this.getDevList(stationCode, nextTry);
+        }
+
+        return result;
     }
 
     async getDevRealKpi(deviceId, deviceTypeId, retry=0){
@@ -753,7 +768,7 @@ class FusionSolarConnector extends utils.Adapter {
             devIds: deviceId,
             devTypeId: deviceTypeId
         };
-        return await axios.post(apiUrl + '/getDevRealKpi',
+        const result = await axios.post(apiUrl + '/getDevRealKpi',
             requestBody,
             { headers: {'XSRF-TOKEN' : `${accessToken}`}
             }).then(response => {
@@ -941,12 +956,21 @@ class FusionSolarConnector extends utils.Adapter {
             return response.data.data[0].dataItemMap;
         }).catch((error) => {
             if(this.shouldRetryAfterQuotaError(error, retry)){
-                return this.getDevRealKpi(deviceId, deviceTypeId, retry+1);
+                return retry;
             }
             else{
                 return null;
             }
         });
+
+        //if a number is returned, then it is the retry-counter
+        //with the sematic, that anoter retry should be done
+        if (result != null && Number.isInteger(result)) {
+            const nextTry = (result + 1);
+            return await this.getDevRealKpi(deviceId, deviceTypeId, nextTry);
+        }
+
+        return result;
     }
 
     shouldRetryAfterQuotaError(error, retry){

@@ -1,22 +1,19 @@
 {
   "name": "iobroker.fusionsolar",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "Adapter to connect Huawei FusionSolar API",
   "author": {
     "name": "KornSW",
     "email": "kornsw@int-it.de"
   },
-  "homepage": "https://github.com/KornSW/ioBroker.FusionSolar",
+  "homepage": "https://github.com/KornSW/ioBroker.fusionsolar",
   "license": "MIT",
   "keywords": [
-    "Huawei",
-    "FusionSolar",
-    "SUN2000",
-    "pv"
+    "Huawei FusionSolar SUN2000 pv"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/KornSW/ioBroker.FusionSolar"
+    "url": "https://github.com/KornSW/iobroker.fusionsolar"
   },
   "dependencies": {
     "@iobroker/adapter-core": "^2.4.0",
@@ -54,7 +51,7 @@
     "lint": "eslint"
   },
   "bugs": {
-    "url": "https://github.com/KornSW/ioBroker.FusionSolar/issues"
+    "url": "https://github.com/KornSW/ioBroker.fusionsolar/issues"
   },
   "readmeFilename": "README.md"
 }
