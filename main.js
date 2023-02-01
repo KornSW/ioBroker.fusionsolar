@@ -16,6 +16,7 @@ let stationList = [];
 let deviceList = [];
 let accessToken = '';
 let polltime = 180;
+let timeslotlength = 3;
 let loggedIn = false;
 
 class FusionSolarConnector extends utils.Adapter {
@@ -46,6 +47,13 @@ class FusionSolarConnector extends utils.Adapter {
             polltime = 180;
         } else {
             polltime = this.config.polltime;
+        }
+
+        if (this.config.timeslotlength < 1) {
+            this.log.error('Timeslot legth in seconds is to short (1 is minimum) -> using 3 now');
+            timeslotlength = 3;
+        } else {
+            timeslotlength = this.config.timeslotlength;
         }
 
         loggedIn = false;
@@ -134,7 +142,7 @@ class FusionSolarConnector extends utils.Adapter {
                         }
                     }
                     else{
-                        await this.apiQuotaProtector();
+                        await this.apiQuotaProtector(0);
                         throw 'DeviceList was not loaded properly';
                     }
 
@@ -142,7 +150,7 @@ class FusionSolarConnector extends utils.Adapter {
 
             }
             else{
-                await this.apiQuotaProtector();
+                await this.apiQuotaProtector(0);
                 throw 'StationList was not loaded properly';
             }
 
@@ -172,7 +180,7 @@ class FusionSolarConnector extends utils.Adapter {
                 nextPoll = 86400000; //1D
             }
             else {
-                await this.apiQuotaProtector();
+                await this.apiQuotaProtector(errorCounter);
                 //SEC: 0,5 / 4 / 13,5 / 32 / 62 / ...
                 nextPoll = 500 * errorCounter * errorCounter * errorCounter;
             }
@@ -182,9 +190,10 @@ class FusionSolarConnector extends utils.Adapter {
         adapterIntervals.readAllStates = setTimeout(this.readAllStates.bind(this, firstTimeInitError, errorCounter), nextPoll);
     }
 
-    async apiQuotaProtector() {
-        const sleepMs = 3000; //ITS A PITA!!! THE API RESPONDS 403 DUE QUOTA-RESTRICTIONS
-        return new Promise(resolve => setTimeout(resolve, sleepMs));
+    async apiQuotaProtector(retryCounter) {
+        const secondsToWait = (retryCounter + 1) * timeslotlength;
+        //ITS A PITA!!! THE API RESPONDS 403 DUE QUOTA-RESTRICTIONS
+        return new Promise(resolve => setTimeout(resolve, (secondsToWait * 1000)));
     }
 
     async writeChannelDataToIoBroker(channelParentPath, channelName, value, channelType, channelRole, createObjectInitally) {
@@ -521,7 +530,7 @@ class FusionSolarConnector extends utils.Adapter {
     */
 
     async getStationList(retry=0){
-        await this.apiQuotaProtector();
+        await this.apiQuotaProtector(retry);
         const requestBody =`{
 
         }`;
@@ -587,7 +596,7 @@ class FusionSolarConnector extends utils.Adapter {
     }
 
     async getStationRealKpi(stationCode, retry=0){
-        await this.apiQuotaProtector();
+        await this.apiQuotaProtector(retry);
         /*const requestBody =`{
             "stationCodes": "${stationCode}"
         }`;*/
@@ -658,7 +667,8 @@ class FusionSolarConnector extends utils.Adapter {
     }
 
     async getDevList(stationCode, retry=0){
-        await this.apiQuotaProtector();
+        await this.apiQuotaProtector(retry);
+
         const requestBody = {
             stationCodes: stationCode
         };
@@ -763,7 +773,8 @@ class FusionSolarConnector extends utils.Adapter {
     }
 
     async getDevRealKpi(deviceId, deviceTypeId, retry=0){
-        await this.apiQuotaProtector();
+        await this.apiQuotaProtector(retry);
+
         const requestBody = {
             devIds: deviceId,
             devTypeId: deviceTypeId

@@ -1,6 +1,6 @@
 {
   "name": "iobroker.fusionsolar",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Adapter to connect Huawei FusionSolar API",
   "author": {
     "name": "KornSW",

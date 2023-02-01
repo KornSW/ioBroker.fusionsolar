@@ -1,8 +1,12 @@
 {
     "common": {
         "name": "fusionsolar",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "news": {
+            "1.0.1": {
+                "en": "Wait time betw. API calls can now be configured (should help on quota problems)",
+                "de": "Wartezeit zw. API-Anfragen ist jetzt konfigurierbar (kann Quota-Probleme lösen)"
+            },
             "1.0.0": {
                 "en": "MVP level reached after some fixes regarding automatic async retries",
                 "de": "MVP Status erreicht, nach fixes bzgl. autom retry"
@@ -64,7 +68,8 @@
     "native": {
         "username": "",
         "client_secret": "",
-        "polltime": 180
+        "polltime": 180,
+        "timeslotlength": 3
     },
     "objects": [],
     "instanceObjects": [

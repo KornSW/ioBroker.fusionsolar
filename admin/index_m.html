@@ -100,12 +100,12 @@
 		<div class="row">
 			<div class="col s6 input-field">
                 <input type="text" class="value" id="username" />
-                <label for="username" class="translate">Username</label>
+                <label for="username">API-Account (NOT your Portal-/App-Account)</label>
             </div>
 
             <div class="col s6 input-field">
                 <input type="password" class="value" id="client_secret" />
-                <label for="client_secret" class="translate">Password</label>
+                <label for="client_secret">Password</label>
             </div>
 		</div>
 		<div class="row">
@@ -117,6 +117,11 @@
 			<div class="col s6 input-field">
                 <input type="number" class="value" id="polltime" />
                 <label for="polltime" class="translate">Poll interval in seconds</label>
+            </div>
+
+            <div class="col s6 input-field">
+                <input type="number" class="value" id="timeslotlength" />
+                <label for="timeslotlength" class="translate">Wait time betw. API calls in seconds</label>
             </div>
 		</div>
     </div>

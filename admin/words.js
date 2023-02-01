@@ -51,6 +51,18 @@ systemDictionary = {
         'pl': 'Okres odpytywania w sekundach',
         'zh-cn': '轮询间隔（秒）'
     },
+    'Wait time betw. API calls in seconds': {
+        'en': 'Wait time betw. API calls in seconds',
+        'de': 'Wartezeit zw. API-Anfragen in Sekunden',
+        'ru': 'Wait time betw. API calls in seconds',
+        'pt': 'Wait time betw. API calls in seconds',
+        'nl': 'Wait time betw. API calls in seconds',
+        'fr': 'Wait time betw. API calls in seconds',
+        'it': 'Wait time betw. API calls in seconds',
+        'es': 'Wait time betw. API calls in seconds',
+        'pl': 'Wait time betw. API calls in seconds',
+        'zh-cn': 'Wait time betw. API calls in seconds'
+    },
     'Api settings': {
         'en': 'Api settings',
         'de': 'API-Einstellungen',

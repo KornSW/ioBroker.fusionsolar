@@ -7,6 +7,8 @@ Adapter to connect to the Huawei 'Fusion Solar' cloud
 
 Build State: [![Build status](https://tobiaskorn.visualstudio.com/KornSW%20(OpenSource)/_apis/build/status/ioBroker.FusionSolar)](https://tobiaskorn.visualstudio.com/KornSW%20(OpenSource)/_build/latest?definitionId=44)
 
+Discussion: [Thread in ioBroker Forum](https://forum.iobroker.net/topic/59422/new-adapter-huawei-fusionsolar-api)
+
 ## Contributors wanted!
 
 I started this project because I needed it myself. In order to be able to offer a solution that is as complete as possible, I am happy about everyone who would like to help here! Please feel free to contact me...
@@ -50,7 +52,7 @@ I started this project because I needed it myself. In order to be able to offer 
 
 ![image](doc/ins4.png)
 
-  9. enter the credentials of your fusionsolar api account
+  9. enter the credentials of your fusionsolar **API**-Account (**NOT** your Portal-/App-Account!)
 
         (if you don't have one, you can request one from: 'eu_inverter_support@huawei.com')
 
@@ -64,6 +66,8 @@ Unfortunately i have to say that the api feels relatively unstable. Above all, d
 It would also be nice, if you could check why the returned values sometimes deviate from those in your app (sometimes so much that it cannot be a matter of a time lag).
 
 ## Changelog
+### 1.0.1
+* (KornSW) Wait time betw. API calls can now be configured (should help on quota problems)
 ### 1.0.0
 * (KornSW) MVP level reached after some fixes regarding automatic async retries
 ### 0.3.0
