@@ -62,6 +62,13 @@ I started this project because I needed it myself. In order to be able to offer 
 
   10. have fun!
 
+## API-Versions
+
+Within the config dialog you can enable the support for the breaking changes that were suddenly made to the API.
+To do so, just enter "**gen-2**" instead of "**default**". The Adapter will follow the new communication contract,
+wich is actually a **BETA-FEATURE**!
+Please feel free to help us getting this stable - its tracked here: [Issue #6](https://github.com/KornSW/ioBroker.fusionsolar/issues/6) (german)
+
 ## @Huawei
 
 Unfortunately i have to say that the api feels relatively unstable. Above all, dealing with the numerous quota restrictions and different error endings can only be managed by senior developers. I hope that this is not an experiment, and that you will continue to further develop the api. Otherwise my work was unfortunately in vain. There is a large community with the need of a working api.
@@ -69,6 +76,8 @@ It would also be nice, if you could check why the returned values sometimes devi
 
 ## Changelog
 
+### 1.2.x
+* (KornSW) (beta-)support for new API-version",
 ### 1.1.0
 * (KornSW) Opt-in for loading data of 'optimizers' or unknown devices (to reduce api load)",
 ### 1.0.1
