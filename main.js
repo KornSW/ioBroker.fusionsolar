@@ -22,6 +22,7 @@ let polltime = 180;
 let timeslotlength = 3;
 let skipOptimizers = true;
 let skipUnknownDevices = true;
+let apiVersion = 'default';
 // ########################################
 
 class FusionSolarConnector extends utils.Adapter {
@@ -63,6 +64,21 @@ class FusionSolarConnector extends utils.Adapter {
         skipOptimizers = this.config.skipOptimizers;
         skipUnknownDevices = this.config.skipUnknownDevices;
 
+        apiVersion = this.config.apiVersion;
+        if (apiVersion == 'default') {
+            this.log.info('Using the default API-Version as configured...');
+        } else if (apiVersion == 'gen-1') {
+            this.log.info('Using the expl. configured API-Version "' + apiVersion + '".');
+        } else if (apiVersion == 'gen-2') {
+            this.log.info('Using the expl. configured API-Version "' + apiVersion + '".');
+        } else {
+            this.log.error('The configured API-Version "' + apiVersion + '" is not known by this adapter (within the config dialog you can use just one of the following: "default" | "gen-1" | "gen-2") >> now using the default...');
+            apiVersion = 'default';
+        }
+        if (apiVersion == 'default') {
+            apiVersion = 'gen-1';
+            this.log.info('...the default API-Version is "' + apiVersion + '".');
+        }
         loggedIn = false;
 
         await this.setObjectNotExistsAsync('lastUpdate', {
@@ -249,12 +265,31 @@ class FusionSolarConnector extends utils.Adapter {
     async writeStationDataToIoBrokerStates(stationInfo, stationRealtimeKpiData, createObjectsInitally) {
         if(stationInfo){
 
-            const stationFolder = stationInfo.stationCode;
+            let stationFolder = stationInfo.stationCode;
+            if(apiVersion == 'gen-2'){
+                if(stationFolder == null || stationFolder == undefined) {
+                    stationFolder = stationInfo.plantCode;
+                }
+            }
+            if(stationFolder == null || stationFolder == undefined) {
+                stationFolder = '(unknown-station)';
+            }
+            //since API-Version 'gen-1':
             await this.writeChannelDataToIoBroker(stationFolder, 'stationCode', stationInfo.stationCode, 'string', 'info.name',  createObjectsInitally);
             await this.writeChannelDataToIoBroker(stationFolder, 'stationName', stationInfo.stationName, 'string', 'info.name',  createObjectsInitally);
             await this.writeChannelDataToIoBroker(stationFolder, 'stationAddr', stationInfo.stationAddr, 'string', 'indicator',  createObjectsInitally);
             await this.writeChannelDataToIoBroker(stationFolder, 'stationLinkman', stationInfo.stationLinkman, 'string', 'indicator',  createObjectsInitally);
             await this.writeChannelDataToIoBroker(stationFolder, 'linkmanPho', stationInfo.linkmanPho, 'string', 'indicator',  createObjectsInitally);
+            if(apiVersion == 'gen-2'){
+                await this.writeChannelDataToIoBroker(stationFolder, 'plantCode', stationInfo.plantCode, 'string', 'info.name',  createObjectsInitally);
+                await this.writeChannelDataToIoBroker(stationFolder, 'plantName', stationInfo.plantName, 'string', 'info.name',  createObjectsInitally);
+                await this.writeChannelDataToIoBroker(stationFolder, 'plantAddress', stationInfo.plantAddress, 'string', 'indicator',  createObjectsInitally);
+                await this.writeChannelDataToIoBroker(stationFolder, 'contactMethod', stationInfo.contactMethod, 'string', 'indicator',  createObjectsInitally);
+                await this.writeChannelDataToIoBroker(stationFolder, 'contactPerson', stationInfo.contactPerson, 'string', 'indicator',  createObjectsInitally);
+                await this.writeChannelDataToIoBroker(stationFolder, 'latitude', stationInfo.latitude, 'string', 'indicator',  createObjectsInitally);
+                await this.writeChannelDataToIoBroker(stationFolder, 'longitude', stationInfo.longitude, 'string', 'indicator',  createObjectsInitally);
+            }
+            //always:
             await this.writeChannelDataToIoBroker(stationFolder, 'capacity', stationInfo.capacity, 'number', 'indicator',  createObjectsInitally);
             await this.writeChannelDataToIoBroker(stationFolder, 'aidType', stationInfo.aidType, 'number', 'indicator',  createObjectsInitally);
             await this.writeChannelDataToIoBroker(stationFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);
@@ -277,7 +312,18 @@ class FusionSolarConnector extends utils.Adapter {
     async writeDeviceDataToIoBrokerStates(deviceInfo, deviceRealtimeKpiData, createObjectsInitally) {
         if(deviceInfo){
 
-            const deviceFolder = deviceInfo.stationCode + '.' + deviceInfo.id;
+            let stationFolder = deviceInfo.stationCode;
+            if(apiVersion == 'gen-2'){
+                if(stationFolder == null || stationFolder == undefined) {
+                    stationFolder = deviceInfo.plantCode;
+                }
+            }
+            if(stationFolder == null || stationFolder == undefined) {
+                stationFolder = '(unknown-station)';
+            }
+
+            const deviceFolder = stationFolder + '.' + deviceInfo.id;
+
             await this.writeChannelDataToIoBroker(deviceFolder, 'id', deviceInfo.id, 'number', 'indicator',  createObjectsInitally);
             await this.writeChannelDataToIoBroker(deviceFolder, 'devName', deviceInfo.devName, 'string', 'info.name',  createObjectsInitally);
             await this.writeChannelDataToIoBroker(deviceFolder, 'devTypeId', deviceInfo.devTypeId, 'number', 'info.name',  createObjectsInitally);
@@ -562,10 +608,18 @@ class FusionSolarConnector extends utils.Adapter {
 
     async getStationList(retry=0){
         await this.apiQuotaProtector(retry);
-        const requestBody =`{
+        let requestBody =`{
 
         }`;
-        const result = await axios.post(apiUrl + '/getStationList',
+        let callUrl = apiUrl + '/getStationList';
+        if(apiVersion == 'gen-2') {
+            callUrl = apiUrl + '/stations';
+            requestBody =`{
+                "pageNo":1,
+                "pageSize":100
+            }`;
+        }
+        const result = await axios.post(callUrl,
             requestBody,
             { headers: {'XSRF-TOKEN' : `${accessToken}`}
             }).then(response => {
@@ -581,32 +635,68 @@ class FusionSolarConnector extends utils.Adapter {
                 this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
                 return null;
             }
+            else if(response.data.failCode == 401){
+                this.log.error('API returned failCode #401 (invalid access to current interface) - MAY BE A MISSMATCH OF THE API-VERSION!');
+                return null;
+            }
             else if(response.data.failCode > 0){
                 this.log.error('API returned failCode #' + response.data.failCode);
                 this.log.debug('Request was: ' + JSON.stringify(requestBody));
                 return null;
             }
 
-            return response.data.data;
-            /*
-            {
-              "data":[{
-                  "aidType":1,
-                  "buildState":null,
-                  "capacity":0.009,
-                  "combineType":null,
-                  "linkmanPho":"xxxx@xxxxxxxxxx.xx",
-                  "stationAddr":"xxxxxxxxxx, 00000 xxxxxxxxxxxxx",
-                  "stationCode":"xxxxxxxxxxxx",
-                  "stationLinkman":"xxxxxx xxxxx",
-                  "stationName":"xx xxxx"
-                }],
-               "failCode":0,
-               "message":null,
-               "params":{"currentTime":1663861121280},
-               "success":true
+            if(apiVersion == 'gen-2' && response.data.data.list) {
+                return response.data.data.list;
+                /*
+                {
+                    "data": {
+                        "list": [
+                            {
+                                "capacity": 18,
+                                "contactMethod": null,
+                                "contactPerson": null,
+                                "gridConnectionDate": "2023-03-31T09:56:55+01:00",
+                                "latitude": "",
+                                "longitude": "",
+                                "plantAddress": "",
+                                "plantCode": "",
+                                "plantName": ""
+                            }
+                        ],
+                        "pageCount": 1,
+                        "pageNo": 1,
+                        "pageSize": 100,
+                        "total": 1
+                    },
+                    "failCode": 0,
+                    "message": "get plant list success",
+                    "success": true
+                }
+                */
+
             }
-            */
+            else{
+                return response.data.data;
+                /*
+                {
+                  "data":[{
+                      "aidType":1,
+                      "buildState":null,
+                      "capacity":0.009,
+                      "combineType":null,
+                      "linkmanPho":"xxxx@xxxxxxxxxx.xx",
+                      "stationAddr":"xxxxxxxxxx, 00000 xxxxxxxxxxxxx",
+                      "stationCode":"xxxxxxxxxxxx",
+                      "stationLinkman":"xxxxxx xxxxx",
+                      "stationName":"xx xxxx"
+                    }],
+                   "failCode":0,
+                   "message":null,
+                   "params":{"currentTime":1663861121280},
+                   "success":true
+                }
+                */
+            }
         }).catch((error) => {
             if(this.shouldRetryAfterQuotaError(error, retry)){
                 return retry;

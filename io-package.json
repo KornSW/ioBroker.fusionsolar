@@ -1,8 +1,12 @@
 {
     "common": {
         "name": "fusionsolar",
-        "version": "1.1.0",
+        "version": "1.2.2",
         "news": {
+            "1.2.0": {
+                "en": "(beta-)support for new API-version",
+                "de": "(beta-)Support für neue API-Version"
+            },
             "1.1.0": {
                 "en": "Opt-in for loading data of 'optimizers' or unknown devices (to reduce api load)",
                 "de": "Opt-in für das Laden von Daten für 'Optimizer' oder unbekannten Geräten (um api last zu reduzieren)"
@@ -75,7 +79,8 @@
         "polltime": 180,
         "timeslotlength": 3,
         "skipOptimizers": true,
-        "skipUnknownDevices": true
+        "skipUnknownDevices": true,
+        "apiVersion": "default"
     },
     "objects": [],
     "instanceObjects": [
