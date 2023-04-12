@@ -9,6 +9,8 @@ Build State: [![Build status](https://tobiaskorn.visualstudio.com/KornSW%20(Open
 
 Discussion: [Thread in ioBroker Forum](https://forum.iobroker.net/topic/59422/new-adapter-huawei-fusionsolar-api)
 
+NPM-Package: [here](https://www.npmjs.com/package/iobroker.fusionsolar)
+
 ## Contributors wanted!
 
 I started this project because I needed it myself. In order to be able to offer a solution that is as complete as possible, I am happy about everyone who would like to help here! Please feel free to contact me...
@@ -66,6 +68,9 @@ Unfortunately i have to say that the api feels relatively unstable. Above all, d
 It would also be nice, if you could check why the returned values sometimes deviate from those in your app (sometimes so much that it cannot be a matter of a time lag).
 
 ## Changelog
+
+### 1.1.0
+* (KornSW) Opt-in for loading data of 'optimizers' or unknown devices (to reduce api load)",
 ### 1.0.1
 * (KornSW) Wait time betw. API calls can now be configured (should help on quota problems)
 ### 1.0.0

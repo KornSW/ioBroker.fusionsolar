@@ -15,9 +15,14 @@ const maxSubseqErrorsUntilSuspend = 10;
 let stationList = [];
 let deviceList = [];
 let accessToken = '';
+let loggedIn = false;
+
+// ### FROM SETTINGS ######################
 let polltime = 180;
 let timeslotlength = 3;
-let loggedIn = false;
+let skipOptimizers = true;
+let skipUnknownDevices = true;
+// ########################################
 
 class FusionSolarConnector extends utils.Adapter {
 
@@ -42,19 +47,21 @@ class FusionSolarConnector extends utils.Adapter {
 
         await this.setStateAsync('info.connection', false, true);
 
+        // LOAD SETTINGS
         if (this.config.polltime < 60) {
             this.log.error('Interval in seconds is to short (60 is minimum) -> using 180 now');
             polltime = 180;
         } else {
             polltime = this.config.polltime;
         }
-
         if (this.config.timeslotlength < 1) {
             this.log.error('Timeslot legth in seconds is to short (1 is minimum) -> using 3 now');
             timeslotlength = 3;
         } else {
             timeslotlength = this.config.timeslotlength;
         }
+        skipOptimizers = this.config.skipOptimizers;
+        skipUnknownDevices = this.config.skipUnknownDevices;
 
         loggedIn = false;
 
@@ -132,6 +139,27 @@ class FusionSolarConnector extends utils.Adapter {
 
                     if(deviceList){
                         for(const deviceInfo of deviceList) {
+
+                            if(deviceInfo.devTypeId == 1){
+                                //INVERTER
+                            }
+                            else if(deviceInfo.devTypeId == 62){
+                                //DONGLE
+                            }
+                            else if(deviceInfo.devTypeId == 46){
+                                //OPTIMIZER
+                                if(skipOptimizers) continue;
+                            }
+                            else if(deviceInfo.devTypeId == 47){
+                                //METER
+                            }
+                            else if(deviceInfo.devTypeId == 39){
+                                //BATTERY
+                            }
+                            else {
+                                //UNKNOWN
+                                if(skipUnknownDevices) continue;
+                            }
 
                             this.log.debug('loading DevRealKpi for ' + deviceInfo.id + ' from the API...');
                             await this.getDevRealKpi(deviceInfo.id, deviceInfo.devTypeId).then((deviceRealtimeKpiData) => {
@@ -259,6 +287,9 @@ class FusionSolarConnector extends utils.Adapter {
                 }
                 else if(deviceInfo.devTypeId == 62){
                     await this.writeChannelDataToIoBroker(deviceFolder, 'devTypeDesc', 'Dongle', 'string', 'info.name',  createObjectsInitally);
+                }
+                else if(deviceInfo.devTypeId == 46){
+                    await this.writeChannelDataToIoBroker(deviceFolder, 'devTypeDesc', 'Optimizer', 'string', 'info.name',  createObjectsInitally);
                 }
                 else if(deviceInfo.devTypeId == 47){
                     await this.writeChannelDataToIoBroker(deviceFolder, 'devTypeDesc', 'Meter', 'string', 'info.name',  createObjectsInitally);

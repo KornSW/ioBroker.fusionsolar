@@ -1,8 +1,12 @@
 {
     "common": {
         "name": "fusionsolar",
-        "version": "1.0.1",
+        "version": "1.1.0",
         "news": {
+            "1.1.0": {
+                "en": "Opt-in for loading data of 'optimizers' or unknown devices (to reduce api load)",
+                "de": "Opt-in für das Laden von Daten für 'Optimizer' oder unbekannten Geräten (um api last zu reduzieren)"
+            },
             "1.0.1": {
                 "en": "Wait time betw. API calls can now be configured (should help on quota problems)",
                 "de": "Wartezeit zw. API-Anfragen ist jetzt konfigurierbar (kann Quota-Probleme lösen)"
@@ -37,7 +41,7 @@
             "KornSW"
         ],
         "keywords": [
-            "Huawei FusionSolar SUN2000 pv"
+            "Huawei", "FusionSolar", "SUN2000", "PV"
         ],
         "license": "MIT",
         "platform": "Javascript/Node.js",
@@ -69,7 +73,9 @@
         "username": "",
         "client_secret": "",
         "polltime": 180,
-        "timeslotlength": 3
+        "timeslotlength": 3,
+        "skipOptimizers": true,
+        "skipUnknownDevices": true
     },
     "objects": [],
     "instanceObjects": [
