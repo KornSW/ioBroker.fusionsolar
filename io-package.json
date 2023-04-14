@@ -1,9 +1,13 @@
 {
     "common": {
         "name": "fusionsolar",
-        "version": "1.2.2",
+        "version": "1.2.4",
         "news": {
-            "1.2.0": {
+            "1.2.4": {
+                "en": "(beta-)API Call Limit Optimization",
+                "de": "(beta-)API Call- Limit Optimierung"
+            },
+            "1.2.3": {
                 "en": "(beta-)support for new API-version",
                 "de": "(beta-)Support für neue API-Version"
             },
