@@ -23,6 +23,9 @@ let timeslotlength = 3;
 let skipOptimizers = true;
 let skipUnknownDevices = true;
 let apiVersion = 'default';
+let frequencys = [1,5,15,50]; // every x count it will crawl
+let counter = 0;
+let frequency = 0;
 // ########################################
 
 class FusionSolarConnector extends utils.Adapter {
@@ -113,6 +116,8 @@ class FusionSolarConnector extends utils.Adapter {
     async readAllStates(isFirsttimeInit, errorCounter) {
         let nextPoll = polltime * 1000;
         let firstTimeInitError = false;
+        counter += 1;
+
 
         try {
 
@@ -171,9 +176,11 @@ class FusionSolarConnector extends utils.Adapter {
 
                             if(deviceInfo.devTypeId == 1){
                                 //INVERTER
+                                frequency = 0;
                             }
                             else if(deviceInfo.devTypeId == 62){
                                 //DONGLE
+                                frequency = 3;
                             }
                             else if(deviceInfo.devTypeId == 46){
                                 //OPTIMIZER
@@ -181,14 +188,25 @@ class FusionSolarConnector extends utils.Adapter {
                             }
                             else if(deviceInfo.devTypeId == 47){
                                 //METER
+                                frequency = 0;
                             }
                             else if(deviceInfo.devTypeId == 39){
                                 //BATTERY
+                                frequency = 1;
                             }
                             else {
                                 //UNKNOWN
                                 if(skipUnknownDevices) continue;
                             }
+                            
+                            // Here should be the value from deviceInfo.frequency in frequency
+                            
+                            if (Number.isInteger(counter / frequencys[frequency]) == false)
+                            {
+                                this.log.debug('SKIPPING because of frequency');
+                                continue;
+                            }
+
 
                             this.log.debug('loading DevRealKpi for ' + deviceInfo.id + ' from the API...');
                             await this.getDevRealKpi(deviceInfo.id, deviceInfo.devTypeId).then((deviceRealtimeKpiData) => {
@@ -243,7 +261,7 @@ class FusionSolarConnector extends utils.Adapter {
             }
 
         }
-
+        
         adapterIntervals.readAllStates = setTimeout(this.readAllStates.bind(this, firstTimeInitError, errorCounter), nextPoll);
     }
 
@@ -253,11 +271,38 @@ class FusionSolarConnector extends utils.Adapter {
         return new Promise(resolve => setTimeout(resolve, (secondsToWait * 1000)));
     }
 
-    async writeChannelDataToIoBroker(channelParentPath, channelName, value, channelType, channelRole, createObjectInitally) {
+    async writeChannelDataToIoBroker(channelParentPath, channelName, value, channelType, channelRole, createObjectInitally, createObjectInitallyUnit, createObjectInitallyStates) {
         if(channelParentPath != null){
             channelParentPath = channelParentPath + '.';
         }
-        if(createObjectInitally){
+        if(createObjectInitally && createObjectInitallyUnit){
+            await this.setObjectNotExistsAsync(channelParentPath + channelName, {
+                type: 'state',
+                common: {
+                    name: channelName,
+                    type: channelType,
+                    role: channelRole,
+                    unit: createObjectInitallyUnit,
+                    read: true,
+                    write: false,
+                },
+                native: {},
+            });
+        } else if(createObjectInitally && createObjectInitallyStates){
+            //createObjectInitallyStates =  {"2": "Entladen", "1": "BLA"}
+            await this.setObjectNotExistsAsync(channelParentPath + channelName, {
+                type: 'state',
+                common: {
+                    name: channelName,
+                    type: channelType,
+                    role: channelRole,
+                    states: createObjectInitallyStates,
+                    read: true,
+                    write: false,
+                },
+                native: {},
+            });
+        } else if(createObjectInitally){
             await this.setObjectNotExistsAsync(channelParentPath + channelName, {
                 type: 'state',
                 common: {
@@ -307,7 +352,7 @@ class FusionSolarConnector extends utils.Adapter {
             //always:
             await this.writeChannelDataToIoBroker(stationFolder, 'capacity', stationInfo.capacity, 'number', 'indicator',  createObjectsInitally);
             await this.writeChannelDataToIoBroker(stationFolder, 'aidType', stationInfo.aidType, 'number', 'indicator',  createObjectsInitally);
-            await this.writeChannelDataToIoBroker(stationFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(stationFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);            
 
             if(stationRealtimeKpiData) {
                 const stationRealtimeKpiFolder = stationFolder + '.kpi.realtime';
@@ -362,6 +407,19 @@ class FusionSolarConnector extends utils.Adapter {
                     await this.writeChannelDataToIoBroker(deviceFolder, 'devTypeDesc', 'Unknown', 'string', 'info.name',  createObjectsInitally);
                 }
             }
+            
+            // Update Frequency
+            let selection = 
+            {
+                0:"Level 1",
+                1:"Level 2",
+                2:"Level 3",
+                3:"Level 4",
+
+            };
+            
+            await this.writeChannelDataToIoBroker(deviceFolder, 'frequency', 1, 'number', 'indicator',  createObjectsInitally,null,selection);
+            
             await this.writeChannelDataToIoBroker(deviceFolder, 'esnCode', deviceInfo.esnCode, 'string', 'info.name',  createObjectsInitally);
             await this.writeChannelDataToIoBroker(deviceFolder, 'invType', deviceInfo.invType, 'string', 'indicator',  createObjectsInitally);
             await this.writeChannelDataToIoBroker(deviceFolder, 'latitude', deviceInfo.latitude, 'number', 'indicator',  createObjectsInitally);
@@ -379,7 +437,7 @@ class FusionSolarConnector extends utils.Adapter {
 
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'openTime', deviceRealtimeKpiData.open_time, 'mixed', 'indicator',  createObjectsInitally);
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'closeTime', deviceRealtimeKpiData.close_time, 'mixed', 'indicator',  createObjectsInitally);
-                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'activePower', deviceRealtimeKpiData.active_power, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'activePower', deviceRealtimeKpiData.active_power, 'number', 'indicator',  createObjectsInitally,"kW");
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'reactivePower', deviceRealtimeKpiData.reactive_power, 'number', 'indicator',  createObjectsInitally);
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'powerFactor', deviceRealtimeKpiData.power_factor, 'number', 'indicator',  createObjectsInitally);
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'runState', deviceRealtimeKpiData.run_state, 'number', 'indicator',  createObjectsInitally);
@@ -499,18 +557,20 @@ class FusionSolarConnector extends utils.Adapter {
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'runState', deviceRealtimeKpiData.run_state, 'number', 'indicator',  createObjectsInitally);
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'batteryStatus', deviceRealtimeKpiData.battery_status, 'number', 'indicator',  createObjectsInitally);
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'batterySoh', deviceRealtimeKpiData.battery_soh, 'number', 'indicator',  createObjectsInitally);
-                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'batterySoc', deviceRealtimeKpiData.battery_soc, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'batterySoc', deviceRealtimeKpiData.battery_soc, 'number', 'indicator',  createObjectsInitally,"%");
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'maxChargePower', deviceRealtimeKpiData.max_charge_power, 'number', 'indicator',  createObjectsInitally);
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'maxDischargePower', deviceRealtimeKpiData.max_discharge_power, 'number', 'indicator',  createObjectsInitally);
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'chargeCap', deviceRealtimeKpiData.charge_cap, 'number', 'indicator',  createObjectsInitally);
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'dischargeCap', deviceRealtimeKpiData.discharge_cap, 'number', 'indicator',  createObjectsInitally);
-                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'chDischargePower', deviceRealtimeKpiData.ch_discharge_power, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'chDischargePower', deviceRealtimeKpiData.ch_discharge_power, 'number', 'indicator',  createObjectsInitally,"kW");
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'chDischargeModel', deviceRealtimeKpiData.ch_discharge_model, 'number', 'indicator',  createObjectsInitally);
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'busbarU', deviceRealtimeKpiData.busbar_u, 'number', 'indicator',  createObjectsInitally);
 
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);
 
                 }
+                    
+
 
             }
 
