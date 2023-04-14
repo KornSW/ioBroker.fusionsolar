@@ -23,12 +23,14 @@ let timeslotlength = 3;
 let skipOptimizers = true;
 let skipUnknownDevices = true;
 let apiVersion = 'default';
+let apiRetry = true;
 // ########################################
 
 //the array-index is the priority level
 //semantic of the array-values: participate on the update every {x} iterations
 const frequenciesPerPriority =  [1,2,4,8,16,32]; // every x count it will crawl
 let globalIterationCounter = 0;
+
 
 class FusionSolarConnector extends utils.Adapter {
 
@@ -1006,8 +1008,14 @@ class FusionSolarConnector extends utils.Adapter {
                 return {};
             }
             else if(response.data.failCode == 407){
-                this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
-                return {};
+                if (apiRetry)
+                {
+                    this.log.debug('API returned failCode #407 (access frequency is too high) - I will give their API another chance!');
+                    return retry;
+                } else {
+                    this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
+                    return {};
+                }
             }
             else if(response.data.failCode > 0){
                 this.log.error('API returned failCode #' + response.data.failCode);

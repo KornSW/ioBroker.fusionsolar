@@ -65,7 +65,7 @@ I started this project because I needed it myself. In order to be able to offer 
 ## API-Versions
 
 Within the config dialog you can enable the support for the breaking changes that were suddenly made to the API.
-To do so, just enter "**gen-2**" instead of "**default**". The Adapter will follow the new communication contract,
+To do so, just select the "**gen-2**" instead of "**default**" API from the dropdown. The Adapter will follow the new communication contract,
 wich is actually a **BETA-FEATURE**!
 Please feel free to help us getting this stable - its tracked here: [Issue #6](https://github.com/KornSW/ioBroker.fusionsolar/issues/6) (german)
 
@@ -76,6 +76,8 @@ It would also be nice, if you could check why the returned values sometimes devi
 
 ## Changelog
 
+### 1.2.4
+* (Stolly82) (beta-)API Call Limit Optimization",
 ### 1.2.3
 * (KornSW) (beta-)support for new API-version",
 ### 1.1.0
