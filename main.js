@@ -217,7 +217,7 @@ class FusionSolarConnector extends utils.Adapter {
                             //to allow individual adjustment by the user...
                             //when implementin this, the hardcoded values above can be removed in order with
                             //a propper initialization of defaults when creating the ioBroker channels
-                            deviceRelatedUpdatePriority = await this.getStatesAsync(stationInfo.stationCode.deviceInfo.updatePriority.value);
+                            deviceRelatedUpdatePriority = await this.getStatesAsync(stationInfo.stationCode.deviceInfo.id.updatePriority.value);
                             this.log.debug('Level Loaded - ' + deviceRelatedUpdatePriority + ' ');
 
                             const freq = frequenciesPerPriority[deviceRelatedUpdatePriority];
