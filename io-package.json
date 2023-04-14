@@ -1,9 +1,9 @@
 {
     "common": {
         "name": "fusionsolar",
-        "version": "1.2.3",
+        "version": "1.2.2",
         "news": {
-            "1.2.3": {
+            "1.2.0": {
                 "en": "(beta-)support for new API-version",
                 "de": "(beta-)Support für neue API-Version"
             },
@@ -80,7 +80,8 @@
         "timeslotlength": 3,
         "skipOptimizers": true,
         "skipUnknownDevices": true,
-        "apiVersion": "default"
+        "apiVersion": "default",
+        "apiRetry": true
     },
     "objects": [],
     "instanceObjects": [

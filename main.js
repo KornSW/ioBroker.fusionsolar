@@ -17,18 +17,18 @@ let deviceList = [];
 let accessToken = '';
 let loggedIn = false;
 
-// ### WILL BE SYNCED FROM SETTINGS #######
+// ### FROM SETTINGS ######################
 let polltime = 180;
 let timeslotlength = 3;
 let skipOptimizers = true;
 let skipUnknownDevices = true;
 let apiVersion = 'default';
+let apiRetry = true;
+let frequencys = [1,2,4,8,16,32]; // every x count it will crawl
+let counter = 0;
+let frequency = 0;
+let skip = false;
 // ########################################
-
-//the array-index is the priority level
-//semantic of the array-values: participate on the update every {x} iterations
-const frequenciesPerPriority = [0, 1, 5, 15, 50];
-let globalIterationCounter = 0;
 
 class FusionSolarConnector extends utils.Adapter {
 
@@ -68,6 +68,7 @@ class FusionSolarConnector extends utils.Adapter {
         }
         skipOptimizers = this.config.skipOptimizers;
         skipUnknownDevices = this.config.skipUnknownDevices;
+        apiRetry = this.config.apiRetry;
 
         apiVersion = this.config.apiVersion;
         if (apiVersion == 'default') {
@@ -119,10 +120,7 @@ class FusionSolarConnector extends utils.Adapter {
         let nextPoll = polltime * 1000;
         let firstTimeInitError = false;
 
-        globalIterationCounter += 1;
-        if(globalIterationCounter >= Number.MAX_SAFE_INTEGER) {
-            globalIterationCounter = 0; //avoid overflow
-        }
+
 
         try {
 
@@ -152,8 +150,7 @@ class FusionSolarConnector extends utils.Adapter {
 
                 for(const stationInfo of stationList) {
 
-                    if (apiVersion == 'gen-1') {
-
+                    if (apiVersion == 'default') {
                         this.log.debug('loading StationRealKpi for ' + stationInfo.stationCode + ' from the API...');
                         await this.getStationRealKpi(stationInfo.stationCode).then((stationRealtimeKpiData) => {
                             this.log.debug('writing station related channel values...');
@@ -164,9 +161,7 @@ class FusionSolarConnector extends utils.Adapter {
                             this.log.debug('initially loading DeviceList for ' + stationInfo.stationCode + ' from the API...');
                             await this.getDevList(stationInfo.stationCode).then((result) => deviceList = result);
                         }
-
                     } else if (apiVersion == 'gen-2') {
-
                         this.log.debug('loading StationRealKpi for ' + stationInfo.plantCode + ' from the API...');
                         await this.getStationRealKpi(stationInfo.plantCode).then((stationRealtimeKpiData) => {
                             this.log.debug('writing station related channel values...');
@@ -177,20 +172,18 @@ class FusionSolarConnector extends utils.Adapter {
                             this.log.debug('initially loading DeviceList for ' + stationInfo.plantCode + ' from the API...');
                             await this.getDevList(stationInfo.plantCode).then((result) => deviceList = result);
                         }
-
                     }
 
                     if(deviceList){
                         for(const deviceInfo of deviceList) {
-
-                            let deviceRelatedUpdatePriority = 0;
+                            skip = false;
                             if(deviceInfo.devTypeId == 1){
                                 //INVERTER
-                                deviceRelatedUpdatePriority = 1;
+                                frequency = 0;
                             }
                             else if(deviceInfo.devTypeId == 62){
                                 //DONGLE
-                                deviceRelatedUpdatePriority = 4;
+                                frequency = 6;
                             }
                             else if(deviceInfo.devTypeId == 46){
                                 //OPTIMIZER
@@ -198,31 +191,35 @@ class FusionSolarConnector extends utils.Adapter {
                             }
                             else if(deviceInfo.devTypeId == 47){
                                 //METER
-                                deviceRelatedUpdatePriority = 1;
+                                frequency = 0;
                             }
                             else if(deviceInfo.devTypeId == 39){
                                 //BATTERY
-                                deviceRelatedUpdatePriority = 2;
+                                frequency = 3;
                             }
                             else {
                                 //UNKNOWN
                                 if(skipUnknownDevices) continue;
                             }
+                            
+                            // Here should be the value from deviceInfo.frequency in frequency
+                            
+                            if (counter == 0)
+                            {
+                                this.log.debug('Read all devices because it`s the first start! - '  + deviceInfo.id);
+                            } else {
+                                if (Number.isInteger(counter / frequencys[frequency]) == false)
+                                {
 
-                            //TODO: here the deviceRelatedUpdatePriority shloud be loaded from the ioBroker channel
-                            //to allow individual adjustment by the user...
-                            //when implementin this, the hardcoded values above can be removed in order with
-                            //a propper initialization of defaults when creating the ioBroker channels
-
-                            const freq = frequenciesPerPriority[deviceRelatedUpdatePriority];
-                            if(freq <= 0){
-                                this.log.debug('skipping reload of DevRealKpi for ' + deviceInfo.id + ' -> updates disabled');
+                                    skip = true;
+                                }   
+                            }
+                            if (skip == true)
+                            {
+                                this.log.debug('SKIPPING because of frequency - ' + deviceInfo.id);
                                 continue;
                             }
-                            else if (Number.isInteger(globalIterationCounter / freq) == false) {
-                                this.log.debug('skipping reload of DevRealKpi for ' + deviceInfo.id + ' -> frequency limit');
-                                continue;
-                            }
+
 
                             this.log.debug('loading DevRealKpi for ' + deviceInfo.id + ' from the API...');
                             await this.getDevRealKpi(deviceInfo.id, deviceInfo.devTypeId).then((deviceRealtimeKpiData) => {
@@ -277,7 +274,9 @@ class FusionSolarConnector extends utils.Adapter {
             }
 
         }
-
+        
+        counter += 1;
+        
         adapterIntervals.readAllStates = setTimeout(this.readAllStates.bind(this, firstTimeInitError, errorCounter), nextPoll);
     }
 
@@ -349,7 +348,7 @@ class FusionSolarConnector extends utils.Adapter {
                 stationFolder = '(unknown-station)';
             }
             //since API-Version 'gen-1':
-            if(apiVersion == 'gen-1'){
+            if(apiVersion == 'default'){
                 await this.writeChannelDataToIoBroker(stationFolder, 'stationCode', stationInfo.stationCode, 'string', 'info.name',  createObjectsInitally);
                 await this.writeChannelDataToIoBroker(stationFolder, 'stationName', stationInfo.stationName, 'string', 'info.name',  createObjectsInitally);
                 await this.writeChannelDataToIoBroker(stationFolder, 'stationAddr', stationInfo.stationAddr, 'string', 'indicator',  createObjectsInitally);
@@ -368,7 +367,7 @@ class FusionSolarConnector extends utils.Adapter {
             //always:
             await this.writeChannelDataToIoBroker(stationFolder, 'capacity', stationInfo.capacity, 'number', 'indicator',  createObjectsInitally);
             await this.writeChannelDataToIoBroker(stationFolder, 'aidType', stationInfo.aidType, 'number', 'indicator',  createObjectsInitally);
-            await this.writeChannelDataToIoBroker(stationFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);
+            await this.writeChannelDataToIoBroker(stationFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);            
 
             if(stationRealtimeKpiData) {
                 const stationRealtimeKpiFolder = stationFolder + '.kpi.realtime';
@@ -423,7 +422,21 @@ class FusionSolarConnector extends utils.Adapter {
                     await this.writeChannelDataToIoBroker(deviceFolder, 'devTypeDesc', 'Unknown', 'string', 'info.name',  createObjectsInitally);
                 }
             }
+            
+            // Update Frequency, example pollTime is 60 sec, Level = all 60s, Level 2 = all 180s, Level 3 = all 320s,....
+            let selection = 
+            {
+                0:"Level 1 (every time)",
+                1:"Level 2 (every 2nd time)",
+                2:"Level 3 (every 4th time)",
+                3:"Level 4 (every 8th time)",
+                4:"Level 5 (every 16th time)",
+                5:"Level 6 (every 32th time)",
 
+            };
+            
+            await this.writeChannelDataToIoBroker(deviceFolder, 'frequency', 1, 'number', 'indicator',  createObjectsInitally,null,selection);
+            
             await this.writeChannelDataToIoBroker(deviceFolder, 'esnCode', deviceInfo.esnCode, 'string', 'info.name',  createObjectsInitally);
             await this.writeChannelDataToIoBroker(deviceFolder, 'invType', deviceInfo.invType, 'string', 'indicator',  createObjectsInitally);
             await this.writeChannelDataToIoBroker(deviceFolder, 'latitude', deviceInfo.latitude, 'number', 'indicator',  createObjectsInitally);
@@ -431,15 +444,6 @@ class FusionSolarConnector extends utils.Adapter {
             await this.writeChannelDataToIoBroker(deviceFolder, 'optimizerNumber', deviceInfo.optimizerNumber, 'number', 'indicator',  createObjectsInitally);
             await this.writeChannelDataToIoBroker(deviceFolder, 'softwareVersion', deviceInfo.softwareVersion, 'string', 'indicator',  createObjectsInitally);
             //await this.writeChannelDataToIoBroker(deviceFolder, 'stationCode', deviceInfo.stationCode, 'string', 'indicator',  createObjectsInitally);
-
-            const updateupdatePrioritySelection = {
-                0: 'dont update',
-                1: 'Priority 1',
-                2: 'Priority 2',
-                3: 'Priority 3',
-                4: 'Priority 4'
-            };
-            await this.writeChannelDataToIoBroker(deviceFolder, 'updatePriority', 1, 'number', 'indicator',  createObjectsInitally, null, updateupdatePrioritySelection);
             await this.writeChannelDataToIoBroker(deviceFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);
 
             if(deviceRealtimeKpiData) {
@@ -450,7 +454,7 @@ class FusionSolarConnector extends utils.Adapter {
 
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'openTime', deviceRealtimeKpiData.open_time, 'mixed', 'indicator',  createObjectsInitally);
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'closeTime', deviceRealtimeKpiData.close_time, 'mixed', 'indicator',  createObjectsInitally);
-                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'activePower', deviceRealtimeKpiData.active_power, 'number', 'indicator',  createObjectsInitally, 'kW');
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'activePower', deviceRealtimeKpiData.active_power, 'number', 'indicator',  createObjectsInitally,"kW");
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'reactivePower', deviceRealtimeKpiData.reactive_power, 'number', 'indicator',  createObjectsInitally);
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'powerFactor', deviceRealtimeKpiData.power_factor, 'number', 'indicator',  createObjectsInitally);
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'runState', deviceRealtimeKpiData.run_state, 'number', 'indicator',  createObjectsInitally);
@@ -570,18 +574,20 @@ class FusionSolarConnector extends utils.Adapter {
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'runState', deviceRealtimeKpiData.run_state, 'number', 'indicator',  createObjectsInitally);
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'batteryStatus', deviceRealtimeKpiData.battery_status, 'number', 'indicator',  createObjectsInitally);
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'batterySoh', deviceRealtimeKpiData.battery_soh, 'number', 'indicator',  createObjectsInitally);
-                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'batterySoc', deviceRealtimeKpiData.battery_soc, 'number', 'indicator',  createObjectsInitally, '%');
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'batterySoc', deviceRealtimeKpiData.battery_soc, 'number', 'indicator',  createObjectsInitally,"%");
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'maxChargePower', deviceRealtimeKpiData.max_charge_power, 'number', 'indicator',  createObjectsInitally);
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'maxDischargePower', deviceRealtimeKpiData.max_discharge_power, 'number', 'indicator',  createObjectsInitally);
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'chargeCap', deviceRealtimeKpiData.charge_cap, 'number', 'indicator',  createObjectsInitally);
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'dischargeCap', deviceRealtimeKpiData.discharge_cap, 'number', 'indicator',  createObjectsInitally);
-                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'chDischargePower', deviceRealtimeKpiData.ch_discharge_power, 'number', 'indicator',  createObjectsInitally, 'kW');
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'chDischargePower', deviceRealtimeKpiData.ch_discharge_power, 'number', 'indicator',  createObjectsInitally,"kW");
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'chDischargeModel', deviceRealtimeKpiData.ch_discharge_model, 'number', 'indicator',  createObjectsInitally);
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'busbarU', deviceRealtimeKpiData.busbar_u, 'number', 'indicator',  createObjectsInitally);
 
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);
 
                 }
+                    
+
 
             }
 
@@ -694,13 +700,15 @@ class FusionSolarConnector extends utils.Adapter {
 
     async getStationList(retry=0){
         await this.apiQuotaProtector(retry);
-        let requestBody = {};
+        let requestBody =`{
+
+        }`;
         let callUrl = apiUrl + '/getStationList';
         if(apiVersion == 'gen-2') {
             callUrl = apiUrl + '/stations';
-            requestBody = {
-                pageNo:1,
-                pageSize:100
+            requestBody ={
+                "pageNo":1,
+                "pageSize":100
             };
         }
         const result = await axios.post(callUrl,
@@ -805,8 +813,6 @@ class FusionSolarConnector extends utils.Adapter {
         /*const requestBody =`{
             "stationCodes": "${stationCode}"
         }`;*/
-
-        //TODO: is here plantCode for gen-2 needed???
         const requestBody = {
             stationCodes: stationCode
         };
@@ -876,11 +882,9 @@ class FusionSolarConnector extends utils.Adapter {
     async getDevList(stationCode, retry=0){
         await this.apiQuotaProtector(retry);
 
-        //TODO: is here plantCode for gen-2 needed???
         const requestBody = {
             stationCodes: stationCode
         };
-
         const result = await axios.post(apiUrl + '/getDevList',
             requestBody,
             { headers: {'XSRF-TOKEN' : `${accessToken}`}
@@ -1001,8 +1005,15 @@ class FusionSolarConnector extends utils.Adapter {
                 return {};
             }
             else if(response.data.failCode == 407){
-                this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
-                return {};
+                if (apiRetry)
+                {
+                    this.log.debug('API returned failCode #407 (access frequency is too high) - I will give their API another chance!');
+                    return retry;
+                } else {
+                    this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
+                    return {};
+                }
+                
             }
             else if(response.data.failCode > 0){
                 this.log.error('API returned failCode #' + response.data.failCode);
