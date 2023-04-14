@@ -70,6 +70,7 @@ class FusionSolarConnector extends utils.Adapter {
         }
         skipOptimizers = this.config.skipOptimizers;
         skipUnknownDevices = this.config.skipUnknownDevices;
+        apiRetry = this.config.apiRetry;
 
         apiVersion = this.config.apiVersion;
         if (apiVersion == 'default') {
