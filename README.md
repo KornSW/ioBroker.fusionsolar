@@ -76,7 +76,7 @@ It would also be nice, if you could check why the returned values sometimes devi
 
 ## Changelog
 
-### 1.2.x
+### 1.2.3
 * (KornSW) (beta-)support for new API-version",
 ### 1.1.0
 * (KornSW) Opt-in for loading data of 'optimizers' or unknown devices (to reduce api load)",

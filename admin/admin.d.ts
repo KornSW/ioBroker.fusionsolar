@@ -89,5 +89,4 @@ interface ioBrokerSocket {
         handler: ioBroker.StateChangeHandler,
     ): void;
 
-    // TODO: other events
 }

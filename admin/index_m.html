@@ -83,68 +83,62 @@
     </script>
 </head>
 <body>
-
     <div class="m adapter-container">
-
         <div class="row">
             <div class="col s12 m4 l2">
                 <img src="sun2000.png" class="logo">
             </div>
         </div>
-
-		<div class="row">
-			<div class="col s12">
-				<h6 class="title translate">Account settings</h6>
-			</div>
-		</div>
-		<div class="row">
-			<div class="col s6 input-field">
+        <div class="row">
+            <div class="col s12">
+                <h6 class="title translate">Account settings</h6>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col s6 input-field">
                 <input type="text" class="value" id="username" />
                 <label for="username">API-Account (NOT your Portal-/App-Account)</label>
             </div>
-
             <div class="col s6 input-field">
                 <input type="password" class="value" id="client_secret" />
                 <label for="client_secret">Password</label>
             </div>
-		</div>
-		<div class="row">
-			<div class="col s12">
-				<h6 class="title translate">Api settings</h6>
-			</div>
-		</div>
-		<div class="row">
-			<div class="col s6 input-field">
+        </div>
+        <div class="row">
+            <div class="col s12">
+                <h6 class="title translate">Api settings</h6>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col s6 input-field">
                 <input type="number" class="value" id="polltime" />
                 <label for="polltime" class="translate">Poll interval in seconds</label>
             </div>
-
             <div class="col s6 input-field">
                 <input type="number" class="value" id="timeslotlength" />
                 <label for="timeslotlength" class="translate">Wait time betw. API calls in seconds</label>
             </div>
-		</div>
-		<div class="row">
-			<div class="col s6 input-field">
+        </div>
+        <div class="row">
+            <div class="col s6 input-field">
                 <input type="checkbox" class="value" id="skipOptimizers" />
                 <label for="skipOptimizers">Skip devices of type 'optimizer'</label>
             </div>
-
-			<div class="col s6 input-field">
+            <div class="col s6 input-field">
                 <input type="checkbox" class="value" id="skipUnknownDevices" />
                 <label for="skipUnknownDevices">Skip devices of unknown type</label>
             </div>
-		</div>
-		<div class="row">
-			<div class="col s6 input-field">
-				<select id="apiVersion" class="value">
-				    <option value="default">Alte API - Registriert vor ~08/2022</option>
-				    <option value="gen-2">Neue API - Registriert nach ~08/2022</option>
-				</select>
-			<label for="apiVersion" class="translate">API-Version</label>
+        </div>
+        <div class="row">
+            <div class="col s6 input-field">
+                <select id="apiVersion" class="value">
+                    <option value="default">default (= '1. gen')</option>
+                    <option value="gen-1">1.gen (accounts <= 08/2022)</option>
+                    <option value="gen-2">2.gen (accounts > 08/2022)</option>
+                </select>
+                <label for="apiVersion" class="translate">API-Version</label>
             </div>
-
-		</div>
+        </div>
     </div>
 </body>
 </html>
