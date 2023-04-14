@@ -28,7 +28,7 @@ let apiRetry = true;
 
 //the array-index is the priority level
 //semantic of the array-values: participate on the update every {x} iterations
-const frequenciesPerPriority =  [1,2,4,8,16,32]; // every x count it will crawl
+const frequenciesPerPriority =  [0,1,2,4,8,16,32]; // every x count it will crawl
 let globalIterationCounter = 0;
 
 
@@ -189,11 +189,11 @@ class FusionSolarConnector extends utils.Adapter {
                             let deviceRelatedUpdatePriority = 0;
                             if(deviceInfo.devTypeId == 1){
                                 //INVERTER
-                                deviceRelatedUpdatePriority = 0;
+                                deviceRelatedUpdatePriority = 1;
                             }
                             else if(deviceInfo.devTypeId == 62){
                                 //DONGLE
-                                deviceRelatedUpdatePriority = 4;
+                                deviceRelatedUpdatePriority = 6;
                             }
                             else if(deviceInfo.devTypeId == 46){
                                 //OPTIMIZER
@@ -201,11 +201,11 @@ class FusionSolarConnector extends utils.Adapter {
                             }
                             else if(deviceInfo.devTypeId == 47){
                                 //METER
-                                deviceRelatedUpdatePriority = 0;
+                                deviceRelatedUpdatePriority = 1;
                             }
                             else if(deviceInfo.devTypeId == 39){
                                 //BATTERY
-                                deviceRelatedUpdatePriority = 2;
+                                deviceRelatedUpdatePriority = 3;
                             }
                             else {
                                 //UNKNOWN
@@ -217,11 +217,6 @@ class FusionSolarConnector extends utils.Adapter {
                             //when implementin this, the hardcoded values above can be removed in order with
                             //a propper initialization of defaults when creating the ioBroker channels
                             
-                            this.log.debug('COUNTER - '  + globalIterationCounter);
-                            if (globalIterationCounter == 0)
-                            {
-                                this.log.debug('Read all devices because it`s the first start! - '  + deviceInfo.id);
-                            }
 
                             const freq = frequenciesPerPriority[deviceRelatedUpdatePriority];
                             if(freq <= 0){
@@ -442,11 +437,13 @@ class FusionSolarConnector extends utils.Adapter {
             //await this.writeChannelDataToIoBroker(deviceFolder, 'stationCode', deviceInfo.stationCode, 'string', 'indicator',  createObjectsInitally);
 
             const updateupdatePrioritySelection = {
-                0: 'dont update',
-                1: 'Priority 1',
-                2: 'Priority 2',
-                3: 'Priority 3',
-                4: 'Priority 4'
+                0:"don't update",
+                1:"Level 1 (every time)",
+                2:"Level 2 (every 2nd time)",
+                3:"Level 3 (every 4th time)",
+                4:"Level 4 (every 8th time)",
+                5:"Level 5 (every 16th time)",
+                6:"Level 6 (every 32th time)"
             };
             await this.writeChannelDataToIoBroker(deviceFolder, 'updatePriority', 1, 'number', 'indicator',  createObjectsInitally, null, updateupdatePrioritySelection);
             await this.writeChannelDataToIoBroker(deviceFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);
@@ -725,8 +722,14 @@ class FusionSolarConnector extends utils.Adapter {
                 return null;
             }
             else if(response.data.failCode == 407){
-                this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
-                return null;
+                if (apiRetry)
+                {
+                    this.log.debug('API returned failCode #407 (access frequency is too high) - I will give their API another chance!');
+                    return retry;
+                } else {
+                    this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
+                    return {};
+                }
             }
             else if(response.data.failCode == 401){
                 this.log.error('API returned failCode #401 (invalid access to current interface) - MAY BE A MISSMATCH OF THE API-VERSION!');
@@ -833,8 +836,14 @@ class FusionSolarConnector extends utils.Adapter {
                 return {};
             }
             else if(response.data.failCode == 407){
-                this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
-                return {};
+                if (apiRetry)
+                {
+                    this.log.debug('API returned failCode #407 (access frequency is too high) - I will give their API another chance!');
+                    return retry;
+                } else {
+                    this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
+                    return {};
+                }
             }
             else if(response.data.failCode > 0){
                 this.log.error('API returned failCode #' + response.data.failCode);
@@ -903,8 +912,14 @@ class FusionSolarConnector extends utils.Adapter {
                 return null;
             }
             else if(response.data.failCode == 407){
-                this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
-                return null;
+                if (apiRetry)
+                {
+                    this.log.debug('API returned failCode #407 (access frequency is too high) - I will give their API another chance!');
+                    return retry;
+                } else {
+                    this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
+                    return {};
+                }
             }
             else if(response.data.failCode > 0){
                 this.log.error('API returned failCode #' + response.data.failCode);
