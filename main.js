@@ -189,7 +189,7 @@ class FusionSolarConnector extends utils.Adapter {
                             let deviceRelatedUpdatePriority = 0;
                             if(deviceInfo.devTypeId == 1){
                                 //INVERTER
-                                deviceRelatedUpdatePriority = 1;
+                                deviceRelatedUpdatePriority = 0;
                             }
                             else if(deviceInfo.devTypeId == 62){
                                 //DONGLE
@@ -201,7 +201,7 @@ class FusionSolarConnector extends utils.Adapter {
                             }
                             else if(deviceInfo.devTypeId == 47){
                                 //METER
-                                deviceRelatedUpdatePriority = 1;
+                                deviceRelatedUpdatePriority = 0;
                             }
                             else if(deviceInfo.devTypeId == 39){
                                 //BATTERY
@@ -217,6 +217,7 @@ class FusionSolarConnector extends utils.Adapter {
                             //when implementin this, the hardcoded values above can be removed in order with
                             //a propper initialization of defaults when creating the ioBroker channels
                             
+                            this.log.debug('COUNTER - '  + globalIterationCounter);
                             if (globalIterationCounter == 0)
                             {
                                 this.log.debug('Read all devices because it`s the first start! - '  + deviceInfo.id);
