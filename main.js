@@ -310,7 +310,7 @@ class FusionSolarConnector extends utils.Adapter {
                     role: channelRole,
                     unit: createObjectInitallyUnit,
                     read: true,
-                    write: false,
+                    write: true,
                 },
                 native: {},
             });
