@@ -188,6 +188,11 @@ class FusionSolarConnector extends utils.Adapter {
                         }
 
                     }
+                    
+                    if (deviceList == false)
+                    {
+                        deviceList = this.getStateAsync(myStation);
+                    }
 
                     if(deviceList){
                         for(const deviceInfo of deviceList) {
