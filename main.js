@@ -925,14 +925,16 @@ class FusionSolarConnector extends utils.Adapter {
                 return null;
             }
             else if(response.data.failCode == 407){
-                if (apiRetry)
+                /*if (apiRetry)
                 {
                     this.log.debug('API returned failCode #407 (access frequency is too high) - I will give their API another chance!');
                     return retry;
                 } else {
                     this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
                     return {};
-                }
+                }*/
+                this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
+                return {};
             }
             else if(response.data.failCode > 0){
                 this.log.error('API returned failCode #' + response.data.failCode);
