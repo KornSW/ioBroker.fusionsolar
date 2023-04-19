@@ -925,6 +925,7 @@ class FusionSolarConnector extends utils.Adapter {
                 return null;
             }
             else if(response.data.failCode == 407){
+                // Only 2 calls allowed per hour! Adapter will not boot if you will restart him more then 2 times 
                 /*if (apiRetry)
                 {
                     this.log.debug('API returned failCode #407 (access frequency is too high) - I will give their API another chance!');
