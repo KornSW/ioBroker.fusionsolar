@@ -217,6 +217,11 @@ class FusionSolarConnector extends utils.Adapter {
                             }
                             
                             deviceRelatedUpdatePriority = await this.getStateAsync(myStation + '.' + deviceId + '.' + 'updatePriority').val;
+                            
+                            if(deviceRelatedUpdatePriority == undefined){
+                                deviceRelatedUpdatePriority = 1;
+                            }
+                            
                             this.log.debug('Level for '+ deviceId + ' Loaded - :' + deviceRelatedUpdatePriority);
 
                             const freq = frequenciesPerPriority[deviceRelatedUpdatePriority];
