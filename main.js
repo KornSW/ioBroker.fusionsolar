@@ -16,6 +16,8 @@ let stationList = [];
 let deviceList = [];
 let accessToken = '';
 let loggedIn = false;
+let myStation = '';
+let deviceId = '';
 
 // ### WILL BE SYNCED FROM SETTINGS #######
 let polltime = 180;
@@ -162,6 +164,8 @@ class FusionSolarConnector extends utils.Adapter {
                             this.log.debug('writing station related channel values...');
                             this.writeStationDataToIoBrokerStates(stationInfo, stationRealtimeKpiData, (isFirsttimeInit || errorCounter > 0));
                         });
+                        
+                        myStation = stationInfo.stationCode;
 
                         if(isFirsttimeInit) {
                             this.log.debug('initially loading DeviceList for ' + stationInfo.stationCode + ' from the API...');
@@ -175,6 +179,8 @@ class FusionSolarConnector extends utils.Adapter {
                             this.log.debug('writing station related channel values...');
                             this.writeStationDataToIoBrokerStates(stationInfo, stationRealtimeKpiData, (isFirsttimeInit || errorCounter > 0));
                         });
+                        
+                        myStation = stationInfo.plantCode;
 
                         if(isFirsttimeInit) {
                             this.log.debug('initially loading DeviceList for ' + stationInfo.plantCode + ' from the API...');
@@ -185,15 +191,15 @@ class FusionSolarConnector extends utils.Adapter {
 
                     if(deviceList){
                         for(const deviceInfo of deviceList) {
+                            
+                            deviceId = deviceInfo.id;
 
                             let deviceRelatedUpdatePriority = 0;
                             if(deviceInfo.devTypeId == 1){
                                 //INVERTER
-                                deviceRelatedUpdatePriority = 1;
                             }
                             else if(deviceInfo.devTypeId == 62){
                                 //DONGLE
-                                deviceRelatedUpdatePriority = 6;
                             }
                             else if(deviceInfo.devTypeId == 46){
                                 //OPTIMIZER
@@ -201,25 +207,17 @@ class FusionSolarConnector extends utils.Adapter {
                             }
                             else if(deviceInfo.devTypeId == 47){
                                 //METER
-                                deviceRelatedUpdatePriority = 1;
                             }
                             else if(deviceInfo.devTypeId == 39){
                                 //BATTERY
-                                deviceRelatedUpdatePriority = 3;
                             }
                             else {
                                 //UNKNOWN
                                 if(skipUnknownDevices) continue;
                             }
                             
-
-                            //TODO: here the deviceRelatedUpdatePriority shloud be loaded from the ioBroker channel
-                            //to allow individual adjustment by the user...
-                            //when implementin this, the hardcoded values above can be removed in order with
-                            //a propper initialization of defaults when creating the ioBroker channels
-                            
-                            deviceRelatedUpdatePriority = await this.getStatesAsync(deviceInfo);
-                            this.log.debug('Level Loaded - ' + JSON.stringify(deviceRelatedUpdatePriority) + ' ');
+                            deviceRelatedUpdatePriority = await this.getStateAsync(myStation + '.' + deviceId + '.' + 'updatePriority').val;
+                            this.log.debug('Level for '+ deviceId + ' Loaded - :' + deviceRelatedUpdatePriority);
 
                             const freq = frequenciesPerPriority[deviceRelatedUpdatePriority];
                             if(freq <= 0){
@@ -296,10 +294,10 @@ class FusionSolarConnector extends utils.Adapter {
 
     async writeChannelDataToIoBroker(channelParentPath, channelName, value, channelType, channelRole, createObjectInitally, createObjectInitallyUnit, createObjectInitallyStates) {
         if(channelParentPath != null){
-            channelParentPath = channelParentPath + '.';
+            channelParentPath = channelParentPath;
         }
         if(createObjectInitally && createObjectInitallyUnit){
-            await this.setObjectNotExistsAsync(channelParentPath + channelName, {
+            await this.setObjectNotExistsAsync(channelParentPath + '.' + channelName, {
                 type: 'state',
                 common: {
                     name: channelName,
@@ -313,7 +311,7 @@ class FusionSolarConnector extends utils.Adapter {
             });
         } else if(createObjectInitally && createObjectInitallyStates){
             //createObjectInitallyStates =  {"2": "Entladen", "1": "BLA"}
-            await this.setObjectNotExistsAsync(channelParentPath + channelName, {
+            await this.setObjectNotExistsAsync(channelParentPath + '.' + channelName, {
                 type: 'state',
                 common: {
                     name: channelName,
@@ -326,7 +324,7 @@ class FusionSolarConnector extends utils.Adapter {
                 native: {},
             });
         } else if(createObjectInitally){
-            await this.setObjectNotExistsAsync(channelParentPath + channelName, {
+            await this.setObjectNotExistsAsync(channelParentPath + '.' + channelName, {
                 type: 'state',
                 common: {
                     name: channelName,
@@ -337,9 +335,16 @@ class FusionSolarConnector extends utils.Adapter {
                 },
                 native: {},
             });
+            await this.setObjectNotExistsAsync(channelParentPath, {
+                type: 'channel',
+                common: {
+                    name: channelParentPath
+                },
+                native: {},
+            });
         }
         if(value != undefined){
-            await this.setStateAsync(channelParentPath + channelName, value, true);
+            await this.setStateAsync(channelParentPath + '.' + channelName, value, true);
         }
     }
 
