@@ -219,17 +219,12 @@ class FusionSolarConnector extends utils.Adapter {
                             deviceRelatedUpdatePriority = await this.getStateAsync(myStation + '.' + deviceId + '.' + 'updatePriority');
                             
                             
-                            if ('val' in deviceRelatedUpdatePriority)
+                            if (deviceRelatedUpdatePriority == null || deviceRelatedUpdatePriority == undefined)
                             {
-                                deviceRelatedUpdatePriority = deviceRelatedUpdatePriority.val;
-                            } else {
-                                deviceRelatedUpdatePriority = undefined;
-                            }
-                            
-                            
-                            if(deviceRelatedUpdatePriority == undefined){
                                 deviceRelatedUpdatePriority = 1;
                                 this.log.debug('Level for '+ deviceId + ' Loaded by default: ' + deviceRelatedUpdatePriority);
+                            } else {
+                                deviceRelatedUpdatePriority = deviceRelatedUpdatePriority.val;
                             }
                             
                             this.log.debug('Level for '+ deviceId + ' Loaded - : ' + deviceRelatedUpdatePriority);
