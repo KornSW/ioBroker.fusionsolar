@@ -218,7 +218,7 @@ class FusionSolarConnector extends utils.Adapter {
                             
                             deviceRelatedUpdatePriority = await this.getStateAsync(myStation + '.' + deviceId + '.' + 'updatePriority').val;
                             
-                            if(deviceRelatedUpdatePriority == undefined){
+                            if(Number.isInteger(deviceRelatedUpdatePriority) == false){
                                 deviceRelatedUpdatePriority = 1;
                                 this.log.debug('Level for '+ deviceId + ' Loaded bx default: ' + deviceRelatedUpdatePriority);
                             }
