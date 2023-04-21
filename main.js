@@ -353,7 +353,7 @@ class FusionSolarConnector extends utils.Adapter {
                 native: {},
             });
         }
-        if(value != undefined){
+        if(value != undefined || value != null){
             await this.setStateAsync(channelParentPath + '.' + channelName, value, true);
         }
     }
@@ -463,7 +463,7 @@ class FusionSolarConnector extends utils.Adapter {
                 5:"Level 5 (every 16th time)",
                 6:"Level 6 (every 32th time)"
             };
-            await this.writeChannelDataToIoBroker(deviceFolder, 'updatePriority', 1, 'number', 'indicator',  createObjectsInitally, null, updateupdatePrioritySelection);
+            await this.writeChannelDataToIoBroker(deviceFolder, 'updatePriority', null, 'number', 'indicator',  createObjectsInitally, null, updateupdatePrioritySelection);
             await this.writeChannelDataToIoBroker(deviceFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);
 
             if(deviceRealtimeKpiData) {
