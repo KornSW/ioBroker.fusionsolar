@@ -65,10 +65,41 @@ I started this project because I needed it myself. In order to be able to offer 
 ## API-Versions
 
 Within the config dialog you can enable the support for the breaking changes that were suddenly made to the API.
-To do so, just enter "**gen-2**" instead of "**default**". The Adapter will follow the new communication contract,
-wich is actually a **BETA-FEATURE**!
-Please feel free to help us getting this stable - its tracked here: [Issue #6](https://github.com/KornSW/ioBroker.fusionsolar/issues/6) (german)
 
+## Call Limits & Settings
+
+![image](doc/UI-Fusion.png)
+We added two new functions regarding API Limitations and #407 API Errors. 
+
+* Main Setting - **Retry API call: if there is a call limit (#407)**
+* Device Objects - **Loading frequency per device**
+
+The **Retry API call: if there is a call limit (#407)** function will not skip the calls anymore, if the API will give an Call Limit issue back. We try with this function to load the data, until we are getting *success* (Before we skipped that call).
+
+Every Device has now a **Loading frequency per device** state where you can set the Loading frequency. 
+
+##### Example
+![image](doc/updatePrioritySetting.png)
+
+In you Adapter Setting you have *60* Seconds in your **Abfrageintervall in Sekunden** and *15* in your **Wartezeit zwischen API-Anfragen in Sekunden**. 
+This means, the Adapter will initiate the requests from Huawai every **60** seconds and will make a break after every API call for **15** Seconds. 
+
+Usually we loaded all devices here.
+
+You can set now in every device a Level with the following settings:
+
+|ID|Level|Info|Explaination|
+|--|--|--|--|
+|0|don't update||After init call, it will never update this device again|
+|1|Level 1|every time|Calls this device every 60 sec. *|
+|2|Level 2|every 2nd time|Calls this device every 120 sec. *|
+|3|Level 3|every 4th time|Calls this device every 240 sec. *|
+|4|Level 4|every 8th time|Calls this device every 480 sec. *|
+|5|Level 5|every 16th time|Calls this device every 960 sec. *|
+|6|Level 6|every 32thtime|Calls this device every 1920 sec. *|
+ 
+ \* after a finished complete loop. 
+ 
 ## @Huawei
 
 Unfortunately i have to say that the api feels relatively unstable. Above all, dealing with the numerous quota restrictions and different error endings can only be managed by senior developers. I hope that this is not an experiment, and that you will continue to further develop the api. Otherwise my work was unfortunately in vain. There is a large community with the need of a working api.
@@ -76,8 +107,10 @@ It would also be nice, if you could check why the returned values sometimes devi
 
 ## Changelog
 
+### 1.2.4
+* (Stolly82) API Call Limit Optimization",
 ### 1.2.3
-* (KornSW) (beta-)support for new API-version",
+* (KornSW) support for new API-version",
 ### 1.1.0
 * (KornSW) Opt-in for loading data of 'optimizers' or unknown devices (to reduce api load)",
 ### 1.0.1

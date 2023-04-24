@@ -16,6 +16,8 @@ let stationList = [];
 let deviceList = [];
 let accessToken = '';
 let loggedIn = false;
+let myStation = '';
+let deviceId = '';
 
 // ### WILL BE SYNCED FROM SETTINGS #######
 let polltime = 180;
@@ -23,12 +25,14 @@ let timeslotlength = 3;
 let skipOptimizers = true;
 let skipUnknownDevices = true;
 let apiVersion = 'default';
+let apiRetry = true;
 // ########################################
 
 //the array-index is the priority level
 //semantic of the array-values: participate on the update every {x} iterations
-const frequenciesPerPriority = [0, 1, 5, 15, 50];
+const frequenciesPerPriority =  [0,1,2,4,8,16,32]; // every x count it will crawl
 let globalIterationCounter = 0;
+
 
 class FusionSolarConnector extends utils.Adapter {
 
@@ -68,6 +72,7 @@ class FusionSolarConnector extends utils.Adapter {
         }
         skipOptimizers = this.config.skipOptimizers;
         skipUnknownDevices = this.config.skipUnknownDevices;
+        apiRetry = this.config.apiRetry;
 
         apiVersion = this.config.apiVersion;
         if (apiVersion == 'default') {
@@ -159,6 +164,8 @@ class FusionSolarConnector extends utils.Adapter {
                             this.log.debug('writing station related channel values...');
                             this.writeStationDataToIoBrokerStates(stationInfo, stationRealtimeKpiData, (isFirsttimeInit || errorCounter > 0));
                         });
+                        
+                        myStation = stationInfo.stationCode;
 
                         if(isFirsttimeInit) {
                             this.log.debug('initially loading DeviceList for ' + stationInfo.stationCode + ' from the API...');
@@ -172,6 +179,8 @@ class FusionSolarConnector extends utils.Adapter {
                             this.log.debug('writing station related channel values...');
                             this.writeStationDataToIoBrokerStates(stationInfo, stationRealtimeKpiData, (isFirsttimeInit || errorCounter > 0));
                         });
+                        
+                        myStation = stationInfo.plantCode;
 
                         if(isFirsttimeInit) {
                             this.log.debug('initially loading DeviceList for ' + stationInfo.plantCode + ' from the API...');
@@ -182,15 +191,15 @@ class FusionSolarConnector extends utils.Adapter {
 
                     if(deviceList){
                         for(const deviceInfo of deviceList) {
+                            
+                            deviceId = deviceInfo.id;
 
                             let deviceRelatedUpdatePriority = 0;
                             if(deviceInfo.devTypeId == 1){
                                 //INVERTER
-                                deviceRelatedUpdatePriority = 1;
                             }
                             else if(deviceInfo.devTypeId == 62){
                                 //DONGLE
-                                deviceRelatedUpdatePriority = 4;
                             }
                             else if(deviceInfo.devTypeId == 46){
                                 //OPTIMIZER
@@ -198,21 +207,27 @@ class FusionSolarConnector extends utils.Adapter {
                             }
                             else if(deviceInfo.devTypeId == 47){
                                 //METER
-                                deviceRelatedUpdatePriority = 1;
                             }
                             else if(deviceInfo.devTypeId == 39){
                                 //BATTERY
-                                deviceRelatedUpdatePriority = 2;
                             }
                             else {
                                 //UNKNOWN
                                 if(skipUnknownDevices) continue;
                             }
-
-                            //TODO: here the deviceRelatedUpdatePriority shloud be loaded from the ioBroker channel
-                            //to allow individual adjustment by the user...
-                            //when implementin this, the hardcoded values above can be removed in order with
-                            //a propper initialization of defaults when creating the ioBroker channels
+                            
+                            deviceRelatedUpdatePriority = await this.getStateAsync(myStation + '.' + deviceId + '.' + 'updatePriority');
+                            
+                            
+                            if (deviceRelatedUpdatePriority == null || deviceRelatedUpdatePriority == undefined)
+                            {
+                                deviceRelatedUpdatePriority = 1;
+                                this.log.debug('Level for '+ deviceId + ' Loaded by default: ' + deviceRelatedUpdatePriority);
+                            } else {
+                                deviceRelatedUpdatePriority = deviceRelatedUpdatePriority.val;
+                            }
+                            
+                            this.log.debug('Level for '+ deviceId + ' Loaded - : ' + deviceRelatedUpdatePriority);
 
                             const freq = frequenciesPerPriority[deviceRelatedUpdatePriority];
                             if(freq <= 0){
@@ -289,10 +304,10 @@ class FusionSolarConnector extends utils.Adapter {
 
     async writeChannelDataToIoBroker(channelParentPath, channelName, value, channelType, channelRole, createObjectInitally, createObjectInitallyUnit, createObjectInitallyStates) {
         if(channelParentPath != null){
-            channelParentPath = channelParentPath + '.';
+            channelParentPath = channelParentPath;
         }
         if(createObjectInitally && createObjectInitallyUnit){
-            await this.setObjectNotExistsAsync(channelParentPath + channelName, {
+            await this.setObjectNotExistsAsync(channelParentPath + '.' + channelName, {
                 type: 'state',
                 common: {
                     name: channelName,
@@ -306,7 +321,7 @@ class FusionSolarConnector extends utils.Adapter {
             });
         } else if(createObjectInitally && createObjectInitallyStates){
             //createObjectInitallyStates =  {"2": "Entladen", "1": "BLA"}
-            await this.setObjectNotExistsAsync(channelParentPath + channelName, {
+            await this.setObjectNotExistsAsync(channelParentPath + '.' + channelName, {
                 type: 'state',
                 common: {
                     name: channelName,
@@ -314,12 +329,12 @@ class FusionSolarConnector extends utils.Adapter {
                     role: channelRole,
                     states: createObjectInitallyStates,
                     read: true,
-                    write: false,
+                    write: true,
                 },
                 native: {},
             });
         } else if(createObjectInitally){
-            await this.setObjectNotExistsAsync(channelParentPath + channelName, {
+            await this.setObjectNotExistsAsync(channelParentPath + '.' + channelName, {
                 type: 'state',
                 common: {
                     name: channelName,
@@ -330,9 +345,16 @@ class FusionSolarConnector extends utils.Adapter {
                 },
                 native: {},
             });
+            await this.setObjectNotExistsAsync(channelParentPath, {
+                type: 'channel',
+                common: {
+                    name: channelParentPath
+                },
+                native: {},
+            });
         }
-        if(value != undefined){
-            await this.setStateAsync(channelParentPath + channelName, value, true);
+        if(value != undefined || value != null){
+            await this.setStateAsync(channelParentPath + '.' + channelName, value, true);
         }
     }
 
@@ -433,13 +455,15 @@ class FusionSolarConnector extends utils.Adapter {
             //await this.writeChannelDataToIoBroker(deviceFolder, 'stationCode', deviceInfo.stationCode, 'string', 'indicator',  createObjectsInitally);
 
             const updateupdatePrioritySelection = {
-                0: 'dont update',
-                1: 'Priority 1',
-                2: 'Priority 2',
-                3: 'Priority 3',
-                4: 'Priority 4'
+                0:"don't update",
+                1:"Level 1 (every time)",
+                2:"Level 2 (every 2nd time)",
+                3:"Level 3 (every 4th time)",
+                4:"Level 4 (every 8th time)",
+                5:"Level 5 (every 16th time)",
+                6:"Level 6 (every 32th time)"
             };
-            await this.writeChannelDataToIoBroker(deviceFolder, 'updatePriority', 1, 'number', 'indicator',  createObjectsInitally, null, updateupdatePrioritySelection);
+            await this.writeChannelDataToIoBroker(deviceFolder, 'updatePriority', null, 'number', 'indicator',  createObjectsInitally, null, updateupdatePrioritySelection);
             await this.writeChannelDataToIoBroker(deviceFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);
 
             if(deviceRealtimeKpiData) {
@@ -716,8 +740,14 @@ class FusionSolarConnector extends utils.Adapter {
                 return null;
             }
             else if(response.data.failCode == 407){
-                this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
-                return null;
+                if (apiRetry)
+                {
+                    this.log.debug('API returned failCode #407 (access frequency is too high) - I will give their API another chance!');
+                    return retry;
+                } else {
+                    this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
+                    return {};
+                }
             }
             else if(response.data.failCode == 401){
                 this.log.error('API returned failCode #401 (invalid access to current interface) - MAY BE A MISSMATCH OF THE API-VERSION!');
@@ -824,8 +854,14 @@ class FusionSolarConnector extends utils.Adapter {
                 return {};
             }
             else if(response.data.failCode == 407){
-                this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
-                return {};
+                if (apiRetry)
+                {
+                    this.log.debug('API returned failCode #407 (access frequency is too high) - I will give their API another chance!');
+                    return retry;
+                } else {
+                    this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
+                    return {};
+                }
             }
             else if(response.data.failCode > 0){
                 this.log.error('API returned failCode #' + response.data.failCode);
@@ -894,8 +930,14 @@ class FusionSolarConnector extends utils.Adapter {
                 return null;
             }
             else if(response.data.failCode == 407){
-                this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
-                return null;
+                if (apiRetry)
+                {
+                    this.log.debug('API returned failCode #407 (access frequency is too high) - I will give their API another chance!');
+                    return retry;
+                } else {
+                    this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
+                    return {};
+                }
             }
             else if(response.data.failCode > 0){
                 this.log.error('API returned failCode #' + response.data.failCode);
@@ -1001,8 +1043,14 @@ class FusionSolarConnector extends utils.Adapter {
                 return {};
             }
             else if(response.data.failCode == 407){
-                this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
-                return {};
+                if (apiRetry)
+                {
+                    this.log.debug('API returned failCode #407 (access frequency is too high) - I will give their API another chance!');
+                    return retry;
+                } else {
+                    this.log.error('API returned failCode #407 (access frequency is too high) - giving up now :-(');
+                    return {};
+                }
             }
             else if(response.data.failCode > 0){
                 this.log.error('API returned failCode #' + response.data.failCode);

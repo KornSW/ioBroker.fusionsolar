@@ -1,11 +1,15 @@
 {
     "common": {
         "name": "fusionsolar",
-        "version": "1.2.3",
+        "version": "1.2.4",
         "news": {
+            "1.2.4": {
+                "en": "API Call Limit Optimization",
+                "de": "API Call- Limit Optimierung"
+            },
             "1.2.3": {
-                "en": "(beta-)support for new API-version",
-                "de": "(beta-)Support für neue API-Version"
+                "en": "support for new API-version",
+                "de": "Support für neue API-Version"
             },
             "1.1.0": {
                 "en": "Opt-in for loading data of 'optimizers' or unknown devices (to reduce api load)",
@@ -80,7 +84,8 @@
         "timeslotlength": 3,
         "skipOptimizers": true,
         "skipUnknownDevices": true,
-        "apiVersion": "default"
+        "apiVersion": "default",
+        "apiRetry": true
     },
     "objects": [],
     "instanceObjects": [
