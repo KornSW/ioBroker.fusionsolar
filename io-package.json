@@ -4,12 +4,12 @@
         "version": "1.2.4",
         "news": {
             "1.2.4": {
-                "en": "(beta-)API Call Limit Optimization",
-                "de": "(beta-)API Call- Limit Optimierung"
+                "en": "API Call Limit Optimization",
+                "de": "API Call- Limit Optimierung"
             },
             "1.2.3": {
-                "en": "(beta-)support for new API-version",
-                "de": "(beta-)Support für neue API-Version"
+                "en": "support for new API-version",
+                "de": "Support für neue API-Version"
             },
             "1.1.0": {
                 "en": "Opt-in for loading data of 'optimizers' or unknown devices (to reduce api load)",
