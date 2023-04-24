@@ -68,6 +68,7 @@ Within the config dialog you can enable the support for the breaking changes tha
 
 ## Call Limits & Settings
 
+![image](doc/UI-Fusion.png)
 We added two new functions regarding API Limitations and #407 API Errors. 
 
 * Main Setting - **Retry API call: if there is a call limit (#407)**
@@ -78,7 +79,7 @@ The **Retry API call: if there is a call limit (#407)** function will not skip t
 Every Device has now a **Loading frequency per device** state where you can set the Loading frequency. 
 
 ##### Example
-![image](doc/UI-Fusion.png)
+![image](doc/updatePriority.png)
 
 In you Adapter Setting you have *60* Seconds in your **Abfrageintervall in Sekunden** and *15* in your **Wartezeit zwischen API-Anfragen in Sekunden**. 
 This means, the Adapter will initiate the requests from Huawai every **60** seconds and will make a break after every API call for **15** Seconds. 
@@ -98,8 +99,6 @@ You can set now in every device a Level with the following settings:
 |6|Level 6|every 32thtime|Calls this device every 1920 sec. *|
  
  \* after a finished complete loop. 
- 
- ![image](doc/updatePriority.png)
  
 ## @Huawei
 
