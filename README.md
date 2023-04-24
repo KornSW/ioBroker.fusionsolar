@@ -79,7 +79,7 @@ The **Retry API call: if there is a call limit (#407)** function will not skip t
 Every Device has now a **Loading frequency per device** state where you can set the Loading frequency. 
 
 ##### Example
-![image](doc/updatePriority.png)
+![image](doc/updatePrioritySetting.png)
 
 In you Adapter Setting you have *60* Seconds in your **Abfrageintervall in Sekunden** and *15* in your **Wartezeit zwischen API-Anfragen in Sekunden**. 
 This means, the Adapter will initiate the requests from Huawai every **60** seconds and will make a break after every API call for **15** Seconds. 
