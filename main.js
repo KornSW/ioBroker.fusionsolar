@@ -574,16 +574,48 @@ class FusionSolarConnector extends utils.Adapter {
                 else if(deviceInfo.devTypeId == 47){
                     //Meter
 
-                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'runState', deviceRealtimeKpiData.run_state, 'number', 'indicator',  createObjectsInitally);
-                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'meterStatus', deviceRealtimeKpiData.meter_status, 'number', 'indicator',  createObjectsInitally);
-                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'meterU', deviceRealtimeKpiData.meter_u, 'number', 'indicator',  createObjectsInitally);
-                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'meterI', deviceRealtimeKpiData.meter_i, 'number', 'indicator',  createObjectsInitally);
-                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'activeCap', deviceRealtimeKpiData.active_cap, 'number', 'indicator',  createObjectsInitally);
-                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'reverseActiveCap', deviceRealtimeKpiData.reverse_active_cap, 'number', 'indicator',  createObjectsInitally);
-                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'powerFactor', deviceRealtimeKpiData.power_factor, 'number', 'indicator',  createObjectsInitally);
-                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'activePower', deviceRealtimeKpiData.active_power, 'number', 'indicator',  createObjectsInitally);
-                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'reactivePower', deviceRealtimeKpiData.reactive_power, 'number', 'indicator',  createObjectsInitally);
-                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'gridFrequency', deviceRealtimeKpiData.grid_frequency, 'number', 'indicator',  createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'meterStatus', deviceRealtimeKpiData.meter_status, 'number', 'indicator', createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'activePower', deviceRealtimeKpiData.active_power, 'number', 'indicator', createObjectsInitally, 'W');
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'activePowerA', deviceRealtimeKpiData.active_power_a, 'number', 'indicator', createObjectsInitally, 'W');
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'activePowerB', deviceRealtimeKpiData.active_power_b, 'number', 'indicator', createObjectsInitally, 'W');
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'activePowerC', deviceRealtimeKpiData.active_power_c, 'number', 'indicator', createObjectsInitally, 'W');
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'reactivePower', deviceRealtimeKpiData.reactive_power, 'number', 'indicator', createObjectsInitally, 'VAR');
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'reactivePowerA', deviceRealtimeKpiData.reactive_power_a, 'number', 'indicator', createObjectsInitally, 'VAR');
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'reactivePowerB', deviceRealtimeKpiData.reactive_power_b, 'number', 'indicator', createObjectsInitally, 'VAR');
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'reactivePowerC', deviceRealtimeKpiData.reactive_power_c, 'number', 'indicator', createObjectsInitally, 'VAR');
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'powerFactor', deviceRealtimeKpiData.power_factor, 'number', 'indicator', createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'activeCap', deviceRealtimeKpiData.active_cap, 'number', 'indicator', createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'reverseActiveCap', deviceRealtimeKpiData.reverse_active_cap, 'number', 'indicator', createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'meterU', deviceRealtimeKpiData.meter_u, 'number', 'indicator', createObjectsInitally, 'V');
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'meterI', deviceRealtimeKpiData.meter_i, 'number', 'indicator', createObjectsInitally, 'A');
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'bU', deviceRealtimeKpiData.b_u, 'number', 'indicator', createObjectsInitally, 'V');
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'bI', deviceRealtimeKpiData.b_i, 'number', 'indicator', createObjectsInitally, 'A');
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'cU', deviceRealtimeKpiData.c_u, 'number', 'indicator', createObjectsInitally, 'V');
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'cI', deviceRealtimeKpiData.c_i, 'number', 'indicator', createObjectsInitally, 'A');
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'abU', deviceRealtimeKpiData.ab_u, 'number', 'indicator', createObjectsInitally, 'V');
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'bcU', deviceRealtimeKpiData.bc_u, 'number', 'indicator', createObjectsInitally, 'V');
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'caU', deviceRealtimeKpiData.ca_u, 'number', 'indicator', createObjectsInitally, 'V');
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'gridFrequency', deviceRealtimeKpiData.grid_frequency, 'number', 'indicator', createObjectsInitally, 'Hz');
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'runState', deviceRealtimeKpiData.run_state, 'number', 'indicator', createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'reverse_reactive_valley', deviceRealtimeKpiData.reverse_reactive_valley, 'number', 'indicator', createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'reverse_reactive_peak', deviceRealtimeKpiData.reverse_reactive_peak, 'number', 'indicator', createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'reverse_active_peak', deviceRealtimeKpiData.reverse_active_peak, 'number', 'indicator', createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'reverse_active_cap', deviceRealtimeKpiData.reverse_active_cap, 'number', 'indicator', createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'reverse_reactive_power', deviceRealtimeKpiData.reverse_reactive_power, 'number', 'indicator', createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'reverse_reactive_top', deviceRealtimeKpiData.reverse_reactive_top, 'number', 'indicator', createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'reverse_active_valley', deviceRealtimeKpiData.reverse_active_valley, 'number', 'indicator', createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'positive_reactive_peak', deviceRealtimeKpiData.positive_reactive_peak, 'number', 'indicator', createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'positive_reactive_top', deviceRealtimeKpiData.positive_reactive_top, 'number', 'indicator', createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'positive_reactive_valley', deviceRealtimeKpiData.positive_reactive_valley, 'number', 'indicator', createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'positive_reactive_power', deviceRealtimeKpiData.positive_reactive_power, 'number', 'indicator', createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'positive_active_peak', deviceRealtimeKpiData.positive_active_peak, 'number', 'indicator', createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'positive_active_top', deviceRealtimeKpiData.positive_active_top, 'number', 'indicator', createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'positive_active_valley', deviceRealtimeKpiData.positive_active_valley, 'number', 'indicator', createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'positive_active_power', deviceRealtimeKpiData.positive_active_power, 'number', 'indicator', createObjectsInitally);
+                    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'total_apparent_power', deviceRealtimeKpiData.total_apparent_power, 'number', 'indicator', createObjectsInitally);
+                    
+                    
+                    
 
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);
 
