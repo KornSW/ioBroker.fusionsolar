@@ -567,10 +567,10 @@ class FusionSolarConnector extends utils.Adapter {
                     await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);
 
                 }
-                // else if(deviceInfo.devTypeId == 62){
+                else if(deviceInfo.devTypeId == 62){
                     //Dongle
-                //    await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);
-                // }
+                   await this.writeChannelDataToIoBroker(deviceRealtimeKpiFolder, 'lastUpdate', new Date().toLocaleTimeString(), 'string', 'indicator',  createObjectsInitally);
+                 }
                 else if(deviceInfo.devTypeId == 47){
                     //Meter
 
@@ -1253,7 +1253,12 @@ class FusionSolarConnector extends utils.Adapter {
                 "success":true
             }
             */
-            return response.data.data[0].dataItemMap;
+            if (response.data.data && response.data.data.length > 0) {
+                return response.data.data[0].dataItemMap;
+            } else {
+                // Behandlung für den Fall, dass keine Daten verfügbar sind
+                return {};
+            }
         }).catch((error) => {
             if(this.shouldRetryAfterQuotaError(error, retry)){
                 return retry;
