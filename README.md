@@ -109,12 +109,14 @@ It would also be nice, if you could check why the returned values sometimes devi
 
 ## Changelog
 
+### 1.3.0
+* (KornSW) Version-Updates (fixing Errors from ioBroker-Bot)
 ### 1.2.4
-* (Stolly82) API Call Limit Optimization",
+* (Stolly82) API Call Limit Optimization
 ### 1.2.3
-* (KornSW) support for new API-version",
+* (KornSW) support for new API-version
 ### 1.1.0
-* (KornSW) Opt-in for loading data of 'optimizers' or unknown devices (to reduce api load)",
+* (KornSW) Opt-in for loading data of 'optimizers' or unknown devices (to reduce api load)
 ### 1.0.1
 * (KornSW) Wait time betw. API calls can now be configured (should help on quota problems)
 ### 1.0.0
@@ -130,7 +132,7 @@ It would also be nice, if you could check why the returned values sometimes devi
 
 MIT License
 
-Copyright (c) 2022 KornSW
+Copyright (c) 2025 KornSW
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
