@@ -1,6 +1,8 @@
 ![Logo](admin/sun2000.png)
 # ioBroker.FusionSolar
 
+Copyright (c) 2025 KornSW
+
 ## fusion solar adapter for ioBroker
 
 Adapter to connect to the Huawei 'Fusion Solar' cloud

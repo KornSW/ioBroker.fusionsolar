@@ -9,19 +9,26 @@
   "homepage": "https://github.com/KornSW/ioBroker.fusionsolar",
   "license": "MIT",
   "keywords": [
-    "Huawei", "FusionSolar", "SUN2000", "PV", "ioBroker"
+    "Huawei",
+    "FusionSolar",
+    "SUN2000",
+    "PV",
+    "ioBroker"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/KornSW/iobroker.fusionsolar"
+    "url": "https://github.com/KornSW/ioBroker.fusionsolar.git"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "dependencies": {
     "@iobroker/adapter-core": "^2.4.0",
-    "@microsoft/signalr": "^5.0.4",
-    "axios": "^0.21.1"
+    "@microsoft/signalr": "^8.0.7",
+    "axios": "^1.9.0"
   },
   "devDependencies": {
-    "@iobroker/testing": "^2.5.4",
+    "@iobroker/testing": "^5.0.4",
     "@types/chai": "^4.2.14",
     "@types/chai-as-promised": "^7.1.3",
     "@types/gulp": "^4.0.8",
@@ -33,8 +40,8 @@
     "chai": "^4.3.0",
     "chai-as-promised": "^7.1.1",
     "eslint": "^7.19.0",
-    "gulp": "^4.0.2",
-    "mocha": "^8.2.1",
+    "gulp": "^5.0.0",
+    "mocha": "^11.3.0",
     "proxyquire": "^2.1.3",
     "sinon": "^9.2.4",
     "sinon-chai": "^3.5.0",
