@@ -1,8 +1,12 @@
 {
     "common": {
         "name": "fusionsolar",
-        "version": "1.3.0",
+        "version": "1.3.1",
         "news": {
+            "1.3.1": {
+                "en": "Updated '@iobroker/adapter-core' to 3.2.3",
+                "de": "Updated '@iobroker/adapter-core' to 3.2.3"
+            },
             "1.3.0": {
                 "en": "Version-Updates (fixing Errors from ioBroker-Bot)",
                 "de": "Versions-Updates (fixt gemeldete Fehler vom ioBroker-Bot)"

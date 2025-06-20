@@ -1,6 +1,6 @@
 {
   "name": "iobroker.fusionsolar",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Adapter to connect Huawei FusionSolar API",
   "author": {
     "name": "KornSW",
@@ -23,7 +23,7 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
-    "@iobroker/adapter-core": "^2.4.0",
+    "@iobroker/adapter-core": "^3.2.3",
     "@microsoft/signalr": "^8.0.7",
     "axios": "^1.9.0"
   },

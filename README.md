@@ -109,6 +109,8 @@ It would also be nice, if you could check why the returned values sometimes devi
 
 ## Changelog
 
+### 1.3.1
+* (KornSW) Updated '@iobroker/adapter-core' to 3.2.3
 ### 1.3.0
 * (KornSW) Version-Updates (fixing Errors from ioBroker-Bot)
 ### 1.2.4
