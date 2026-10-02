@@ -9,7 +9,8 @@
     "exclude": [
         "**/build",
         "node_modules/",
-        "widgets/",
-        "gulpfile.js"
+        ".dev-server/",
+        "**/*.test.js",
+        "test/"
     ]
 }

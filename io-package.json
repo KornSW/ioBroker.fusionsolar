@@ -5,66 +5,145 @@
         "news": {
             "1.3.1": {
                 "en": "Updated '@iobroker/adapter-core' to 3.2.3",
-                "de": "Updated '@iobroker/adapter-core' to 3.2.3"
+                "de": "'@iobroker/adapter-core' auf 3.2.3 aktualisiert",
+                "ru": "Обновлен @iobroker/adapter-core до версии 3.2.3.",
+                "pt": "Atualizado '@iobroker/adapter-core' para 3.2.3",
+                "nl": "'@iobroker/adapter-core' bijgewerkt naar 3.2.3",
+                "fr": "Mise à jour de '@iobroker/adapter-core' vers 3.2.3",
+                "it": "Aggiornato \"@iobroker/adapter-core\" alla versione 3.2.3",
+                "es": "Actualizado '@iobroker/adapter-core' a 3.2.3",
+                "pl": "Zaktualizowano „@iobroker/adapter-core” do wersji 3.2.3",
+                "uk": "Оновлено '@iobroker/adapter-core' до 3.2.3",
+                "zh-cn": "将“@iobroker/adapter-core”更新为 3.2.3"
             },
             "1.3.0": {
                 "en": "Version-Updates (fixing Errors from ioBroker-Bot)",
-                "de": "Versions-Updates (fixt gemeldete Fehler vom ioBroker-Bot)"
+                "de": "Versions-Updates (fixt gemeldete Fehler vom ioBroker-Bot)",
+                "ru": "Обновления версий (исправление ошибок от ioBroker-Bot)",
+                "pt": "Atualizações de versão (corrigindo erros do ioBroker-Bot)",
+                "nl": "Versie-updates (fouten herstellen van ioBroker-Bot)",
+                "fr": "Mises à jour de version (correction des erreurs d'ioBroker-Bot)",
+                "it": "Aggiornamenti della versione (correzione degli errori di ioBroker-Bot)",
+                "es": "Actualizaciones de versión (solucionando errores de ioBroker-Bot)",
+                "pl": "Aktualizacje wersji (naprawianie błędów z ioBroker-Bot)",
+                "uk": "Оновлення версій (виправлення помилок ioBroker-Bot)",
+                "zh-cn": "版本更新（修复 ioBroker-Bot 的错误）"
             },
             "1.2.4": {
                 "en": "API Call Limit Optimization",
-                "de": "API Call- Limit Optimierung"
+                "de": "API Call- Limit Optimierung",
+                "ru": "Оптимизация лимита вызовов API",
+                "pt": "Otimização de limite de chamadas de API",
+                "nl": "Optimalisatie van API-oproeplimieten",
+                "fr": "Optimisation de la limite d'appels API",
+                "it": "Ottimizzazione del limite delle chiamate API",
+                "es": "Optimización del límite de llamadas API",
+                "pl": "Optymalizacja limitu połączeń API",
+                "uk": "Оптимізація ліміту викликів API",
+                "zh-cn": "API调用限制优化"
             },
             "1.2.3": {
                 "en": "support for new API-version",
-                "de": "Support für neue API-Version"
+                "de": "Support für neue API-Version",
+                "ru": "поддержка новой версии API",
+                "pt": "suporte para nova versão da API",
+                "nl": "ondersteuning voor nieuwe API-versie",
+                "fr": "prise en charge de la nouvelle version de l'API",
+                "it": "supporto per la nuova versione API",
+                "es": "soporte para nueva versión API",
+                "pl": "wsparcie dla nowej wersji API",
+                "uk": "підтримка нової версії API",
+                "zh-cn": "支持新的 API 版本"
             },
             "1.1.0": {
                 "en": "Opt-in for loading data of 'optimizers' or unknown devices (to reduce api load)",
-                "de": "Opt-in für das Laden von Daten für 'Optimizer' oder unbekannten Geräten (um api last zu reduzieren)"
+                "de": "Opt-in für das Laden von Daten für 'Optimizer' oder unbekannten Geräten (um api last zu reduzieren)",
+                "ru": "Согласие на загрузку данных «оптимизаторов» или неизвестных устройств (чтобы уменьшить нагрузку на API)",
+                "pt": "Ative o carregamento de dados de 'otimizadores' ou dispositivos desconhecidos (para reduzir a carga da API)",
+                "nl": "Opt-in voor het laden van gegevens van 'optimizers' of onbekende apparaten (om de API-belasting te verminderen)",
+                "fr": "Opter pour le chargement des données des « optimiseurs » ou des appareils inconnus (pour réduire la charge de l'API)",
+                "it": "Attiva il caricamento dei dati di \"ottimizzatori\" o dispositivi sconosciuti (per ridurre il carico dell'API)",
+                "es": "Opte por cargar datos de 'optimizadores' o dispositivos desconocidos (para reducir la carga de API)",
+                "pl": "Wyraź zgodę na ładowanie danych „optymalizatorów” lub nieznanych urządzeń (w celu zmniejszenia obciążenia interfejsu API)",
+                "uk": "Увімкнення завантаження даних «оптимізаторів» або невідомих пристроїв (щоб зменшити навантаження API)",
+                "zh-cn": "选择加载“优化器”或未知设备的数据（以减少 API 负载）"
             },
             "1.0.1": {
                 "en": "Wait time betw. API calls can now be configured (should help on quota problems)",
-                "de": "Wartezeit zw. API-Anfragen ist jetzt konfigurierbar (kann Quota-Probleme lösen)"
+                "de": "Wartezeit zw. API-Anfragen ist jetzt konfigurierbar (kann Quota-Probleme lösen)",
+                "ru": "Время ожидания между прочим. Теперь можно настроить вызовы API (должно помочь в решении проблем с квотами).",
+                "pt": "Espere um tempo entre. Chamadas de API agora podem ser configuradas (devem ajudar em problemas de cota)",
+                "nl": "Wachttijd tussen API-aanroepen kunnen nu worden geconfigureerd (zou moeten helpen bij quotaproblemen)",
+                "fr": "Temps d'attente entre. Les appels d'API peuvent désormais être configurés (devraient aider à résoudre les problèmes de quota)",
+                "it": "Aspetta il tempo tra. Ora è possibile configurare le chiamate API (dovrebbe aiutare in caso di problemi di quota)",
+                "es": "Tiempo de espera entre. Las llamadas API ahora se pueden configurar (deberían ayudar con problemas de cuotas)",
+                "pl": "Czas oczekiwania między. Można teraz konfigurować wywołania API (powinno pomóc w przypadku problemów z limitami)",
+                "uk": "Час очікування між. Виклики API тепер можна налаштувати (має допомогти у вирішенні проблем із квотами)",
+                "zh-cn": "之间等待时间。现在可以配置 API 调用（应该有助于解决配额问题）"
             }
         },
-        "title": "Huawei FusionSolar API",
         "titleLang": {
             "en": "Huawei FusionSolar API",
-            "de": "Huawei FusionSolar API"
+            "de": "Huawei FusionSolar API",
+            "ru": "Huawei FusionSolar API",
+            "pt": "Huawei FusionSolar API",
+            "nl": "Huawei FusionSolar API",
+            "fr": "Huawei FusionSolar API",
+            "it": "Huawei FusionSolar API",
+            "es": "Huawei FusionSolar API",
+            "pl": "Huawei FusionSolar API",
+            "uk": "Huawei FusionSolar API",
+            "zh-cn": "Huawei FusionSolar API"
         },
         "desc": {
-            "en": "Communicates with the Huawei FusionSolar API",
-            "de": "Kommuniziert mit der Huawei FusionSolar API"
+            "en": "Reads the data of your Huawei PV system (inverters, batteries, meters) from the FusionSolar cloud",
+            "de": "Liest die Daten Ihrer Huawei-PV-Anlage (Wechselrichter, Batterien, Zähler) aus der FusionSolar-Cloud",
+            "ru": "Считывает данные вашей фотоэлектрической системы Huawei (инверторы, батареи, счетчики) из облака FusionSolar.",
+            "pt": "Lê os dados do seu sistema fotovoltaico Huawei (inversores, baterias, medidores) da nuvem FusionSolar",
+            "nl": "Leest de gegevens van uw Huawei PV-systeem (omvormers, batterijen, meters) uit de FusionSolar-cloud",
+            "fr": "Lit les données de votre système PV Huawei (onduleurs, batteries, compteurs) à partir du cloud FusionSolar",
+            "it": "Legge i dati del tuo impianto fotovoltaico Huawei (inverter, batterie, contatori) dal cloud FusionSolar",
+            "es": "Lee los datos de tu sistema fotovoltaico Huawei (inversores, baterías, contadores) desde la nube FusionSolar",
+            "pl": "Odczytuje dane Twojego systemu fotowoltaicznego Huawei (falowniki, akumulatory, liczniki) z chmury FusionSolar",
+            "uk": "Зчитує дані вашої фотоелектричної системи Huawei (інвертори, батареї, лічильники) із хмари FusionSolar",
+            "zh-cn": "从FusionSolar云读取您的华为光伏系统（逆变器、电池、电表）的数据"
         },
         "authors": [
-            "KornSW"
+            "KornSW <kornsw@int-it.de>"
         ],
         "keywords": [
-            "Huawei", "FusionSolar", "SUN2000", "PV"
+            "Huawei",
+            "FusionSolar",
+            "SUN2000",
+            "PV"
         ],
-        "license": "MIT",
+        "licenseInformation": {
+            "type": "free",
+            "license": "MIT"
+        },
         "platform": "Javascript/Node.js",
-        "main": "main.js",
         "icon": "sun2000.png",
         "enabled": true,
         "extIcon": "https://raw.githubusercontent.com/KornSW/ioBroker.fusionsolar/master/admin/sun2000.png",
         "readme": "https://github.com/KornSW/ioBroker.fusionsolar/blob/master/README.md",
         "loglevel": "info",
+        "tier": 3,
         "mode": "daemon",
         "type": "energy",
         "compact": true,
         "connectionType": "cloud",
         "dataSource": "poll",
-        "materialize": true,
-        "globalDependencies": [
-          {
-            "admin": ">=7.4.10"
-          }
-        ],
+        "adminUI": {
+            "config": "json"
+        },
         "dependencies": [
             {
-                "js-controller": ">=5.0.19"
+                "js-controller": ">=6.0.11"
+            }
+        ],
+        "globalDependencies": [
+            {
+                "admin": ">=7.4.10"
             }
         ]
     },
@@ -73,11 +152,12 @@
     ],
     "encryptedNative": [
         "client_secret"
-    ],    
+    ],
     "native": {
         "username": "",
         "client_secret": "",
-        "polltime": 180,
+        "apiHost": "eu5.fusionsolar.huawei.com",
+        "polltime": 300,
         "timeslotlength": 3,
         "skipOptimizers": true,
         "skipUnknownDevices": true,
@@ -93,18 +173,19 @@
                 "name": "Information"
             },
             "native": {}
-        },        
-        {
-        "_id": "info.connection",
-        "type": "state",
-        "common": {
-            "role": "indicator.connected",
-            "name": "If communication with the cloud works",
-            "type": "boolean",
-            "read": true,
-            "write": false,
-            "def": false
         },
-        "native": {}
-    }]
+        {
+            "_id": "info.connection",
+            "type": "state",
+            "common": {
+                "role": "indicator.connected",
+                "name": "If communication with the cloud works",
+                "type": "boolean",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        }
+    ]
 }

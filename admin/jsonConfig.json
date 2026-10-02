@@ -1,0 +1,160 @@
+{
+    "i18n": true,
+    "type": "panel",
+    "items": {
+        "_logo": {
+            "type": "staticImage",
+            "src": "sun2000.png",
+            "newLine": true,
+            "xs": 12,
+            "sm": 3,
+            "md": 2,
+            "lg": 1,
+            "xl": 1
+        },
+        "_headerAccount": {
+            "type": "header",
+            "text": "Account settings",
+            "size": 3,
+            "newLine": true
+        },
+        "_accountHint": {
+            "type": "staticText",
+            "text": "accountHint",
+            "newLine": true,
+            "xs": 12,
+            "sm": 12,
+            "md": 12,
+            "lg": 12,
+            "xl": 12
+        },
+        "username": {
+            "type": "text",
+            "label": "API user name",
+            "help": "usernameHelp",
+            "newLine": true,
+            "xs": 12,
+            "sm": 12,
+            "md": 6,
+            "lg": 4,
+            "xl": 4
+        },
+        "client_secret": {
+            "type": "password",
+            "label": "API password (system code)",
+            "visible": true,
+            "xs": 12,
+            "sm": 12,
+            "md": 6,
+            "lg": 4,
+            "xl": 4
+        },
+        "apiHost": {
+            "type": "autocomplete",
+            "label": "API server",
+            "help": "apiHostHelp",
+            "freeSolo": true,
+            "options": [
+                "eu5.fusionsolar.huawei.com",
+                "region01eu5.fusionsolar.huawei.com",
+                "region02eu5.fusionsolar.huawei.com",
+                "region03eu5.fusionsolar.huawei.com",
+                "region04eu5.fusionsolar.huawei.com",
+                "intl.fusionsolar.huawei.com",
+                "sg5.fusionsolar.huawei.com",
+                "la5.fusionsolar.huawei.com",
+                "au5.fusionsolar.huawei.com"
+            ],
+            "newLine": true,
+            "xs": 12,
+            "sm": 12,
+            "md": 6,
+            "lg": 4,
+            "xl": 4
+        },
+        "apiVersion": {
+            "type": "select",
+            "label": "API generation",
+            "help": "apiVersionHelp",
+            "options": [
+                { "label": "automatic detection", "value": "default" },
+                { "label": "1st generation (accounts created until 08/2022)", "value": "gen-1" },
+                { "label": "2nd generation (accounts created after 08/2022)", "value": "gen-2" }
+            ],
+            "xs": 12,
+            "sm": 12,
+            "md": 6,
+            "lg": 4,
+            "xl": 4
+        },
+        "_headerPolling": {
+            "type": "header",
+            "text": "Polling and API limits",
+            "size": 3,
+            "newLine": true
+        },
+        "polltime": {
+            "type": "number",
+            "label": "Poll interval in seconds",
+            "help": "polltimeHelp",
+            "min": 60,
+            "max": 86400,
+            "newLine": true,
+            "xs": 12,
+            "sm": 12,
+            "md": 6,
+            "lg": 4,
+            "xl": 4
+        },
+        "timeslotlength": {
+            "type": "number",
+            "label": "Wait time between API calls in seconds",
+            "help": "timeslotlengthHelp",
+            "min": 1,
+            "max": 60,
+            "xs": 12,
+            "sm": 12,
+            "md": 6,
+            "lg": 4,
+            "xl": 4
+        },
+        "apiRetry": {
+            "type": "checkbox",
+            "label": "Retry API calls on call limit errors (#407 / HTTP 403)",
+            "help": "apiRetryHelp",
+            "newLine": true,
+            "xs": 12,
+            "sm": 12,
+            "md": 12,
+            "lg": 12,
+            "xl": 12
+        },
+        "_headerDevices": {
+            "type": "header",
+            "text": "Devices",
+            "size": 3,
+            "newLine": true
+        },
+        "skipOptimizers": {
+            "type": "checkbox",
+            "label": "Skip devices of type 'optimizer'",
+            "help": "skipHelp",
+            "newLine": true,
+            "xs": 12,
+            "sm": 12,
+            "md": 6,
+            "lg": 4,
+            "xl": 4
+        },
+        "skipUnknownDevices": {
+            "type": "checkbox",
+            "label": "Skip devices of unknown type",
+            "help": "skipHelp",
+            "xs": 12,
+            "sm": 12,
+            "md": 6,
+            "lg": 4,
+            "xl": 4
+        }
+    }
+}
