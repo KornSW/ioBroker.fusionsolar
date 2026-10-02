@@ -1,0 +1,69 @@
+{
+    // ioBroker dev-server tasks - see doc/DEVELOPMENT.md "Debugging"
+    "version": "2.0.0",
+    "tasks": [
+        {
+            // one-time setup: installs js-controller + admin into .dev-server and links this adapter (symlinks)
+            "label": "dev-server: setup (once)",
+            "type": "shell",
+            "command": "npx dev-server setup --symlinks --adminPort 8081",
+            "problemMatcher": []
+        },
+        {
+            // starts js-controller + admin (http://127.0.0.1:8081) WITHOUT the adapter - the adapter is started by
+            // the debugger (launch configuration "ioBroker: Debug adapter"). Keeps running in the background.
+            "label": "dev-server: start (without adapter)",
+            "type": "shell",
+            "command": "npx dev-server watch --noStart",
+            "isBackground": true,
+            // The problem matcher is only used to detect when the dev-server is ready ("endsPattern"), so that the
+            // debugger starts afterwards. VS Code requires a valid pattern (file + line + message) - this one never
+            // matches, so no "problems" are reported.
+            "problemMatcher": {
+                "owner": "iobroker-dev-server",
+                "fileLocation": "absolute",
+                "pattern": {
+                    "regexp": "^__never_matches__(.+):(\\d+):(.+)$",
+                    "file": 1,
+                    "line": 2,
+                    "message": 3
+                },
+                "background": {
+                    "activeBegins": true,
+                    "beginsPattern": "dev-server|js-controller starting",
+                    "endsPattern": "\\[Browsersync\\] Watching files"
+                }
+            }
+        },
+        {
+            // opens the configuration page of the instance fusionsolar.0 in the default browser
+            "label": "ioBroker: open admin in browser",
+            "type": "shell",
+            "command": "xdg-open 'http://127.0.0.1:8081/#tab-instances/config/system.adapter.fusionsolar.0'",
+            "osx": {
+                "command": "open 'http://127.0.0.1:8081/#tab-instances/config/system.adapter.fusionsolar.0'"
+            },
+            "windows": {
+                // "start" works in PowerShell, cmd and Git Bash
+                "command": "start http://127.0.0.1:8081/#tab-instances/config/system.adapter.fusionsolar.0"
+            },
+            "presentation": { "reveal": "silent" },
+            "problemMatcher": []
+        },
+        {
+            // used by F5: 1. start the dev-server (waits until it is ready), 2. open the admin in the browser
+            "label": "dev-server: start + open admin",
+            "dependsOrder": "sequence",
+            "dependsOn": ["dev-server: start (without adapter)", "ioBroker: open admin in browser"],
+            "problemMatcher": []
+        },
+        {
+            // alternative without debugger: dev-server starts the adapter itself and restarts it on code changes
+            "label": "dev-server: watch (adapter auto-restart)",
+            "type": "shell",
+            "command": "npx dev-server watch",
+            "isBackground": true,
+            "problemMatcher": []
+        }
+    ]
+}

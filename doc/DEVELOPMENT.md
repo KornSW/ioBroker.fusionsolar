@@ -53,8 +53,33 @@ npm run translate       # translates io-package.json news/desc and admin/i18n/en
 > [!NOTE]
 > `test:integration` installs the `dev` version of the js-controller, which needs a recent Node.js 22 (>= 22.19).
 
-For manual tests with a real ioBroker installation use [dev-server](https://github.com/ioBroker/dev-server)
-(`npx @iobroker/dev-server setup` once, then `npx @iobroker/dev-server watch`).
+## Debugging (VS Code + ioBroker dev-server)
+
+The repository contains a ready-to-use VS Code configuration (`.vscode/launch.json`, `.vscode/tasks.json`) based on
+[@iobroker/dev-server](https://github.com/ioBroker/dev-server) (devDependency).
+
+1. **Once:** run the task _dev-server: setup (once)_ (Terminal > Run Task) or `npx dev-server setup --symlinks --adminPort 8081`.
+   It installs js-controller + admin into `.dev-server/default` (git-ignored) and links this repository as adapter
+   `fusionsolar` (symlinks, no packing needed after code changes).
+2. **Debug:** select **"ioBroker: Debug adapter (dev-server)"** in _Run and Debug_ and press **F5**.
+   - The task _dev-server: start (without adapter)_ starts js-controller + admin in the background
+     (admin: http://127.0.0.1:8081, the admin folder is served with live reload by Browsersync).
+     VS Code waits until the dev-server is ready (problem matcher in `.vscode/tasks.json`), then the default browser
+     opens the configuration page of `fusionsolar.0` (task _ioBroker: open admin in browser_).
+   - The debugger then starts the instance `fusionsolar.0` **directly from the workspace sources** - breakpoints in
+     `main.js` and `lib/*.js` work. `NODE_PATH` points to `.dev-server/default/node_modules` so that
+     `@iobroker/adapter-core` finds the js-controller.
+   - Configure the instance (API credentials) in the admin UI, then restart the debug session.
+   - The message "adapter disabled" is expected: the instance stays disabled in the dev-server so that the
+     js-controller does not start a second copy; the debugger starts it with `--debug`.
+3. Stopping the debug session stops only the adapter; the dev-server keeps running (stop it via _Terminate Task_).
+
+Alternatives:
+- Task _dev-server: watch (adapter auto-restart)_: dev-server starts the adapter itself and restarts it on code changes (no debugger).
+- `npx dev-server debug --wait` + launch configuration **"ioBroker: Attach to adapter (port 9229)"**.
+
+Notes: the dev-server data (objects, states, instance config) lives in `.dev-server/default/iobroker-data`. On Windows 11
+the js-controller logs "Cannot read disk size ... wmic" - harmless.
 
 ## Releasing
 

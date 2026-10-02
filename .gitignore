@@ -1,6 +1,10 @@
 .git
 .idea
-.vscode
+# VS Code: only the shared debug/task configuration is versioned
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/extensions.json
 .vs
 *.code-workspace
 node_modules

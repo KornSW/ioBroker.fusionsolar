@@ -1,0 +1,35 @@
+{
+    // Debugging the adapter with the ioBroker dev-server - see doc/DEVELOPMENT.md "Debugging"
+    "version": "0.2.0",
+    "configurations": [
+        {
+            // F5: starts the dev-server (js-controller + admin, task in the background), opens the admin in the
+            // browser and then starts the adapter instance fusionsolar.0 directly from the workspace sources
+            // -> breakpoints in main.js / lib/*.js work.
+            // NODE_PATH lets @iobroker/adapter-core find the js-controller inside .dev-server.
+            "name": "ioBroker: Debug adapter (dev-server)",
+            "type": "node",
+            "request": "launch",
+            "preLaunchTask": "dev-server: start + open admin",
+            "program": "${workspaceFolder}/main.js",
+            "args": ["--debug", "0"],
+            "cwd": "${workspaceFolder}/.dev-server/default",
+            "env": {
+                "NODE_PATH": "${workspaceFolder}/.dev-server/default/node_modules"
+            },
+            "console": "integratedTerminal",
+            "skipFiles": ["<node_internals>/**"],
+            "outFiles": []
+        },
+        {
+            // attaches to an adapter started with "npx dev-server debug" (or "debug --wait")
+            "name": "ioBroker: Attach to adapter (port 9229)",
+            "type": "node",
+            "request": "attach",
+            "address": "127.0.0.1",
+            "port": 9229,
+            "skipFiles": ["<node_internals>/**"],
+            "outFiles": []
+        }
+    ]
+}

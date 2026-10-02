@@ -94,6 +94,12 @@ npm run test:kvu           # KVU self tests (needs Python 3.12; locally a portab
 npx -y @iobroker/repochecker https://github.com/KornSW/ioBroker.fusionsolar --local --noinfo   # checks the LOCAL files
 ```
 
+**Debugging:** VS Code launch configuration "ioBroker: Debug adapter (dev-server)" (F5) - pre-launch task starts
+`dev-server watch --noStart` (js-controller + admin on http://127.0.0.1:8081), then `main.js` is started from the
+workspace with `--debug 0`, cwd `.dev-server/default` and `NODE_PATH=.dev-server/default/node_modules` (adapter-core
+resolves the js-controller relative to its own location - without NODE_PATH it is not found). One-time setup:
+`npx dev-server setup --symlinks --adminPort 8081`. Details: doc/DEVELOPMENT.md "Debugging".
+
 If local Node is < 22.19, run the integration test against the stable controller with a scratch mocha file:
 `tests.integration(<repoPath>, { controllerVersion: 'latest' })`.
 

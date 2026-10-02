@@ -21,8 +21,9 @@ Work is organized in three levels (agreed with the maintainer):
       extension (e.g. hook that runs `translate-adapter` after KVU) - needed before the enrollment.
 - [ ] ~~KVU: rotate old README changelog entries into `CHANGELOG_OLD.md`~~ - deliberately ignored for now (maintainer decision 2026-10-02; only a warning).
 - [ ] Original WP KVU: also reads/writes with `read_text()`/`write_text()` (CRLF lost on Windows) - fixed in the generic edition only.
-- [ ] Local debugging: set up `@iobroker/dev-server` (`npx @iobroker/dev-server setup`, then `watch`), document a VS Code
-      launch configuration; old `.dev-server` folder from 2024 can be deleted.
+- [x] Local debugging: `@iobroker/dev-server` 0.8 (devDependency, symlink mode), VS Code F5 "ioBroker: Debug adapter
+      (dev-server)" verified (adapter starts from workspace sources, connects to js-controller 7.2.3 / admin 8.0.21).
+      Old 2024 `.dev-server` was moved to the session scratchpad (not deleted by hand).
 - [ ] Local Node 22.15.1 is too old for the integration test with js-controller dev (needs >= 22.19) -> update Node locally.
 - [x] `.gitignore`: add `.commitinfo` (E9006) and `dist/` (KVU output).
 - [ ] dependabot: `cooldown: { default: 7 }` (E8915), ignore major `@types/node` (E8917); optional: random cron, limit 15, automerge workflow.
