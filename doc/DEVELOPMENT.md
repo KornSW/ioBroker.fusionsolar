@@ -58,12 +58,22 @@ For manual tests with a real ioBroker installation use [dev-server](https://gith
 
 ## Releasing
 
-Releases are created with the [release-script](https://github.com/AlCalzone/release-script):
+Releases are created **automatically on every push** by KVU - stable versions on `master`, pre-releases
+`x.y.z-<branch>.<n>` (npm dist-tag `next`) on all other branches - (Korn Versioning Utility, see
+[.kvu/README.md](../.kvu/README.md)) - there is no manual release step and no `release-script`.
 
-1. Document the changes in `README.md` below `### **WORK IN PROGRESS**`
-2. Run `npm run release major|minor|patch` (it updates the versions, translates the news, commits and tags)
-3. The GitHub workflow `test-and-release.yml` runs the tests. To publish to npm automatically,
-   set up [trusted publishing](https://docs.npmjs.com/trusted-publishers) and enable the `deploy` job in the workflow.
+1. Document the changes in `README.md` below `### **WORK IN PROGRESS**` (or write meaningful commit subjects).
+   Use `Breaking Change` / `New Feature` in an entry to get a major / minor version, otherwise a patch version is created.
+2. Push to `master`. The workflow `test-and-release.yml` runs the tests, then KVU calculates the version, writes it to
+   `package.json`, `package-lock.json`, `io-package.json` and the README changelog, commits `<subject> -> VERSIONING`,
+   tags `vX.Y.Z` and the `deploy` job publishes to npm (trusted publishing with provenance) and creates the GitHub release.
+
+One-time setup:
+- npm: configure a [trusted publisher](https://docs.npmjs.com/trusted-publishers) for `iobroker.fusionsolar`
+  (GitHub repository `KornSW/ioBroker.fusionsolar`, workflow `test-and-release.yml`).
+- GitHub (recommended): an SSH **deploy key with write access** stored as repository secret `KVU_DEPLOY_KEY`, so that the
+  tag push triggers its own workflow run (required by the ioBroker repository checker for new adapters).
+- Branch protection on `master` must allow the push of the `VERSIONING` commit (deploy key / GitHub Actions).
 
 ## API documentation
 

@@ -90,6 +90,7 @@ npm run test:integration   # real js-controller in temp dir - needs local Node >
 npm run lint               # 0 errors required; JSDoc description warnings are tolerated
 npm run check              # tsc type check
 npm run translate          # i18n + io-package translations (Google translate via @iobroker/adapter-dev)
+npm run test:kvu           # KVU self tests (needs Python 3.12; locally a portable "embeddable" Python works)
 npx -y @iobroker/repochecker https://github.com/KornSW/ioBroker.fusionsolar --local --noinfo   # checks the LOCAL files
 ```
 
@@ -109,6 +110,18 @@ If local Node is < 22.19, run the integration test against the stable controller
 - `updatePriority` 0 = loaded once on the first cycle after start, then never (matches the old documentation).
 - Station `capacity` has no unit (gen-1 delivers MW, gen-2 kWp).
 - Version **2.0.0** (breaking: Node >= 22, js-controller >= 6.0.11, admin >= 7.6.17, new admin UI).
+- **Releases via KVU** (Korn Versioning Utility, `.kvu/`, generic edition of the maintainer's `WP-*` release.py) instead
+  of `@alcalzone/release-script`: **one** workflow `test-and-release.yml` = standard ioBroker test half + "KVU HOOK"
+  (`versioning` job: version from README `### **WORK IN PROGRESS**` / commit subjects "Breaking Change" / "New Feature" /
+  "**MVP**", materialized into package.json, package-lock.json, io-package.json, README; commit `-> VERSIONING`; annotated
+  tag; atomic push) + own `deploy` job (npm trusted publishing with provenance, GitHub release). Optional secret
+  `KVU_DEPLOY_KEY` makes the tag push trigger a tag run (required by the repochecker for new adapters), otherwise the
+  release is published inline. Accepted repochecker warnings: W3017 (own deploy steps), W0062 (no release-script).
+  Every push creates a release: stable `x.y.z` on `master` ("mainBranch" in `.kvu/kvu.json`), **pre-release
+  `x.y.z-<branch>.<n>`** on every other branch (npm dist-tag `next`, GitHub pre-release, README changelog untouched;
+  `dependabot/*` excluded). Only stable tags are the boundary for the commit fallback.
+  Changelog stays in README (mandatory, see requirements reference); `CHANGELOG_OLD.md` is deliberately ignored for now.
+  Write change entries with the KVU keywords, e.g. `- (KornSW) **New Feature:** ...`.
 
 ## Maintaining this skill
 

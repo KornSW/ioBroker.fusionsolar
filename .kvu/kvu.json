@@ -1,0 +1,21 @@
+{
+    "changelog": {
+        "mode": "readme-section",
+        "file": "README.md",
+        "section": "Changelog",
+        "upcomingHeading": "**WORK IN PROGRESS**",
+        "releaseHeading": "{version} ({date})",
+        "keepEmptyUpcoming": false
+    },
+    "fallbackEntry": "({author}) {subject}",
+    "versionFiles": [
+        { "file": "package.json", "path": ["version"] },
+        { "file": "package-lock.json", "path": ["version"] },
+        { "file": "package-lock.json", "path": ["packages", "", "version"] },
+        { "file": "io-package.json", "path": ["common", "version"] }
+    ],
+    "versionInfoFile": "doc/versioninfo.json",
+    "distDirectory": "dist",
+    "mainBranch": "master",
+    "prereleaseOnOtherBranches": true
+}

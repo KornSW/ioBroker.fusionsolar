@@ -157,15 +157,15 @@ Contributors are very welcome!
 -->
 ### **WORK IN PROGRESS**
 
-- (KornSW) **BREAKING:** requires Node.js >= 22, js-controller >= 6.0.11 and admin >= 7.4.10
+- (KornSW) **Breaking Change:** requires Node.js >= 22, js-controller >= 6.0.11 and admin >= 7.4.10
 - (KornSW) the adapter was completely reworked to improve its stability (the object ids stay the same)
-- (KornSW) new admin user interface (jsonConfig)
+- (KornSW) **New Feature:** new admin user interface (jsonConfig)
 - (KornSW) fixed "Cannot read properties of null (reading '0')" (#19, #21)
-- (KornSW) residential inverters (`devTypeId` 38, e.g. SUN2000-xKTL-L1) are now supported (#14)
+- (KornSW) **New Feature:** residential inverters (`devTypeId` 38, e.g. SUN2000-xKTL-L1) are now supported (#14)
 - (KornSW) fixed the unit of the battery power `chDischargePower` (W instead of kW) (#16)
 - (KornSW) units and roles of many states were corrected
-- (KornSW) the API server can be configured (for accounts outside of the 'eu5' region)
-- (KornSW) the API generation is detected automatically
+- (KornSW) **New Feature:** the API server can be configured (for accounts outside of the 'eu5' region)
+- (KornSW) **New Feature:** the API generation is detected automatically
 - (KornSW) fewer API calls: devices of the same type are loaded with one call, dongles are no longer requested, station and device lists are reloaded only once a day
 - (KornSW) re-login, retries and error handling were reworked (limited retries, exponential backoff, clear log messages)
 - (KornSW) the default poll interval for new instances is now 300 seconds

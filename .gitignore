@@ -17,3 +17,9 @@ admin/i18n/*/flat.txt
 
 # ioBroker dev-server
 .dev-server/
+
+# KVU build output
+dist/
+
+# repochecker
+.commitinfo

@@ -6,6 +6,8 @@ on:
   push:
     branches:
       - "master"
+      # all other branches create pre-releases "<version>-<branch>.<n>" (see KVU HOOK below)
+      - "**"
     tags:
       # normal versions
       - "v[0-9]+.[0-9]+.[0-9]+"
@@ -19,6 +21,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # ===================================================================================================================
+  # STANDARD ioBroker TEST HALF (as required by the ioBroker repository checker - keep it aligned with the template)
+  # ===================================================================================================================
+
   # Performs quick checks before the expensive test runs
   check-and-lint:
     if: contains(github.event.head_commit.message, '[skip ci]') == false
@@ -26,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: ioBroker/testing-action-check@v1
+      - uses: ioBroker/testing-action-check@v2
         with:
           node-version: '22.x'
           lint: true
@@ -34,11 +40,12 @@ jobs:
   # Runs adapter tests on all supported node versions and OSes
   adapter-tests:
     if: contains(github.event.head_commit.message, '[skip ci]') == false
+    needs: [check-and-lint]
 
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node-version: [22.x, 24.x]
+        node-version: [22.x, 24.x, 26.x]
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
@@ -47,29 +54,207 @@ jobs:
           node-version: ${{ matrix.node-version }}
           os: ${{ matrix.os }}
 
-# TODO: To enable automatic npm releases, set up trusted publishing in your npm account
-# See https://docs.npmjs.com/trusted-publishers for more details
-# Then uncomment the following block:
+  # ===================================================================================================================
+  #  >>> KVU HOOK <<<   (Korn Versioning Utility - see .kvu/README.md)
+  #
+  #  The release half of the ioBroker template is NOT used. Instead of the manual release-script + tag push, the
+  #  version is calculated automatically on every push to a branch:
+  #
+  #    - main branch ("mainBranch" in .kvu/kvu.json, "master"): stable release x.y.z, README changelog is updated
+  #    - any other branch: pre-release x.y.z-<branch>.<n> (npm dist-tag "next", GitHub pre-release),
+  #      the README changelog stays untouched until the main branch releases the entries
+  #    - dependabot/* branches: no release
+  #
+  #    push to a branch (tests green)
+  #      -> job "versioning": .kvu/release.py calculates the next version from the README changelog section
+  #         ("### **WORK IN PROGRESS**") or the commit subjects ("Breaking Change" / "New Feature" / "**MVP**"),
+  #         writes it to package.json, package-lock.json, io-package.json and the README changelog,
+  #         commits "<subject> -> VERSIONING", creates the annotated tag vX.Y.Z and pushes both ATOMICALLY.
+  #      -> job "deploy": npm publish with provenance (trusted publishing) + GitHub release.
+  #
+  #  Where "deploy" runs depends on the optional repository secret KVU_DEPLOY_KEY (SSH deploy key with write access):
+  #    - secret set (recommended): the push is done with the deploy key and therefore triggers this workflow again
+  #      for the tag -> "deploy" runs in the tag-triggered run (the ioBroker repository checker requires a
+  #      tag-triggered run with green tests for every release of new adapters).
+  #    - secret not set: pushes made with GITHUB_TOKEN never trigger workflows -> "deploy" runs inline in the same run.
+  #
+  #  The VERSIONING commit itself triggers a normal test run on master; "versioning" skips it (no endless loop).
+  # ===================================================================================================================
 
-#  # Deploys the final package to NPM
-#  deploy:
-#    needs: [check-and-lint, adapter-tests]
-#
-#    # Trigger this step only when a commit on any branch is tagged with a version number
-#    if: |
-#      contains(github.event.head_commit.message, '[skip ci]') == false &&
-#      github.event_name == 'push' &&
-#      startsWith(github.ref, 'refs/tags/v')
-#
-#    runs-on: ubuntu-latest
-#
-#    # Write permissions are required to create Github releases
-#    permissions:
-#      id-token: write
-#      contents: write
-#
-#    steps:
-#      - uses: ioBroker/testing-action-deploy@v1
-#        with:
-#          node-version: '22.x'
-#          github-token: ${{ secrets.GITHUB_TOKEN }}
+  versioning:
+    needs: [check-and-lint, adapter-tests]
+    if: |
+      github.event_name == 'push' &&
+      startsWith(github.ref, 'refs/heads/') &&
+      !startsWith(github.ref_name, 'dependabot/') &&
+      !contains(github.event.head_commit.message, 'VERSIONING')
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    outputs:
+      version: ${{ steps.kvu.outputs.version }}
+      tag: ${{ steps.kvu.outputs.tag }}
+      publish-inline: ${{ steps.push.outputs.publish-inline }}
+
+    steps:
+      - name: Checkout complete repository history
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+          # empty secret -> GITHUB_TOKEN is used
+          ssh-key: ${{ secrets.KVU_DEPLOY_KEY }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Self-test of KVU
+        run: python -m unittest discover -s .kvu -p "test_*.py"
+
+      - name: Configure Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Capture triggering commit subject
+        id: source
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "subject=$(git log -1 --pretty=%s)" >> "$GITHUB_OUTPUT"
+
+      - name: Calculate and materialize the version (KVU)
+        id: kvu
+        shell: bash
+        env:
+          KVU_BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          RESULT="$(python .kvu/release.py | tail -n 1)"
+          echo "$RESULT"
+          field() { python -c 'import json,sys; v=json.loads(sys.argv[1])[sys.argv[2]]; print(str(v).lower() if isinstance(v,bool) else v)' "$RESULT" "$1"; }
+          echo "version=$(field version)" >> "$GITHUB_OUTPUT"
+          echo "tag=$(field tag)" >> "$GITHUB_OUTPUT"
+          echo "notes=$(field notes)" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$(field prerelease)" >> "$GITHUB_OUTPUT"
+
+      - name: Validate materialized state
+        shell: bash
+        env:
+          VERSION: ${{ steps.kvu.outputs.version }}
+          PRERELEASE: ${{ steps.kvu.outputs.prerelease }}
+        run: |
+          set -euo pipefail
+          test "$(node -p "require('./package.json').version")" = "$VERSION"
+          test "$(node -p "require('./io-package.json').common.version")" = "$VERSION"
+          test "$(node -p "require('./package-lock.json').version")" = "$VERSION"
+          if [ "$PRERELEASE" != "true" ]; then
+            grep -qE "^### ${VERSION//./\\.}( |$)" README.md
+          fi
+          python -m json.tool doc/versioninfo.json > /dev/null
+
+      - name: Commit and tag locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A -- . ':!dist'
+          if git diff --cached --quiet; then
+            echo "No materialized changes - nothing to release."
+            exit 1
+          fi
+          git commit -m "${{ steps.source.outputs.subject }} -> VERSIONING"
+          git tag -a "${{ steps.kvu.outputs.tag }}" -F "${{ steps.kvu.outputs.notes }}"
+
+      - name: Push commit and tag atomically
+        id: push
+        shell: bash
+        env:
+          HAS_DEPLOY_KEY: ${{ secrets.KVU_DEPLOY_KEY != '' }}
+        run: |
+          set -euo pipefail
+          # one atomic push: either master AND the tag are updated, or nothing (no half state on cancellation)
+          git push --atomic origin "HEAD:refs/heads/${{ github.ref_name }}" "refs/tags/${{ steps.kvu.outputs.tag }}"
+          if [ "$HAS_DEPLOY_KEY" = "true" ]; then
+            echo "publish-inline=false" >> "$GITHUB_OUTPUT"
+            echo "Pushed with deploy key -> the tag-triggered run will publish."
+          else
+            echo "publish-inline=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::KVU_DEPLOY_KEY is not set -> publishing inline. The ioBroker repository checker expects a tag-triggered run for releases of new adapters."
+          fi
+
+  # Deploys the final package to NPM and creates the GitHub release
+  deploy:
+    needs: [check-and-lint, adapter-tests, versioning]
+
+    # runs for tag pushes (made by KVU with the deploy key) or inline after "versioning" (no deploy key);
+    # "!cancelled() && !failure()" because "versioning" is skipped in tag-triggered runs
+    if: >-
+      ${{
+        !cancelled() && !failure() &&
+        contains(github.event.head_commit.message, '[skip ci]') == false &&
+        (
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
+          needs.versioning.outputs.publish-inline == 'true'
+        )
+      }}
+
+    runs-on: ubuntu-latest
+
+    # Write permissions are required to create Github releases, id-token for npm trusted publishing (provenance)
+    permissions:
+      id-token: write
+      contents: write
+
+    steps:
+      - name: Checkout the release tag
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: ${{ startsWith(github.ref, 'refs/tags/') && github.ref || needs.versioning.outputs.tag }}
+
+      - name: Determine the release
+        id: release
+        shell: bash
+        env:
+          TAG_FROM_REF: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
+          TAG_FROM_KVU: ${{ needs.versioning.outputs.tag }}
+        run: |
+          set -euo pipefail
+          TAG="${TAG_FROM_REF:-$TAG_FROM_KVU}"
+          VERSION="${TAG#v}"
+          test "$(node -p "require('./package.json').version")" = "$VERSION"
+          # actions/checkout may replace annotated tags by lightweight ones -> fetch them again
+          git fetch --force origin "refs/tags/$TAG:refs/tags/$TAG"
+          git for-each-ref "refs/tags/$TAG" --format='%(contents)' > "$RUNNER_TEMP/release-notes.md"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if [[ "$VERSION" == *-* ]]; then echo "npm-tag=next" >> "$GITHUB_OUTPUT"; else echo "npm-tag=latest" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: |
+          # trusted publishing (OIDC) needs npm >= 11.5.1
+          npm install -g npm@^11.5.1
+          npm ci
+
+      - name: Publish package to npm (trusted publishing with provenance)
+        run: npm publish --provenance --access public --tag "${{ steps.release.outputs.npm-tag }}"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.release.outputs.tag }}" \
+            --verify-tag \
+            --title "Release ${{ steps.release.outputs.tag }}" \
+            --notes-file "$RUNNER_TEMP/release-notes.md" \
+            ${{ contains(steps.release.outputs.version, '-') && '--prerelease' || '' }}

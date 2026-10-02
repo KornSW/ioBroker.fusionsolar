@@ -95,6 +95,41 @@ should match npm version; issues titled `[iobroker-bot]`/`URGENT:`/`IMPORTANT:` 
 needs **`cooldown: { default: 7 }`** and must ignore major updates of `@types/node`; suggested: random `cron` schedule,
 `open-pull-requests-limit` >= 15, `automerge-dependabot.yml`; `.gitignore` must contain `.commitinfo`.
 
+## Changelog and release pipeline – what is fixed and what is free (verified in repochecker source, 2026-10-02)
+
+Verified in `lib/M6000_Readme.js`, `lib/M3000_Testing.js`, `lib/M1000_IOPackageJson.js`, `lib/M2000_Npm.js` and
+`lib/postprocessing.js` (severity remapping when `isNewAdapter` = adapter not yet in the latest repository).
+
+**Changelog**
+- `## Changelog` in README.md is **mandatory** (E6003) with `###` version headers `x.y.z[-pre.N][ anything]` (W6028;
+  allowed non-version headers: `WORK IN PROGRESS`, `CHANGELOG_OLD.md`, `Older versions/changelog/entries`) and bullets
+  `- text` / `* text` (W6027). The **npm latest version must have an entry** (E6029), the io-package version should (W6030).
+- A separate root `CHANGELOG.md` -> W6017 (only `js-controller`/`admin` are exempt); a fixed link from the README changelog
+  to a `CHANGELOG.md` -> W6032. The only supported split is **`CHANGELOG_OLD.md` in the repo root** for older entries
+  (linked from README; missing link is an error for new adapters, S6022 -> E). A `doc/changelog.md` is not checked, but the
+  README must still contain the current entries.
+- `io-package.json` `common.news`: entry for the current version (E1036), max. 20 (E1031, builder truncates at 7), all
+  required languages (E1045) and really translated (E1144 for the newest release).
+
+**Workflow `test-and-release.yml`**
+- Fixed: file name (E3002), name "Test and Release" (W3004), push trigger on default branch (E3006/E3007/E3037) + tags
+  `v[0-9]+.[0-9]+.[0-9]+` and `v[0-9]+.[0-9]+.[0-9]+-**` (E3008/E3040), concurrency (W3009 -> E for new), jobs
+  `check-and-lint` (E3010) and `adapter-tests` (E3011) with `needs: check-and-lint` (S3014 -> E for new), node matrix 22/24/26
+  (E3025), OS ubuntu/windows/macos (E3027), no `continue-on-error`, no `always()`, last run on default branch green (E3031).
+  The ioBroker actions `testing-action-check@v2` / `testing-action-adapter@v1` are expected (only warnings if replaced).
+- `deploy` job: **required for new adapters** (S3012 -> E), must `needs` both test jobs (E3016), node >= 24 (E3022).
+  Using own steps instead of `ioBroker/testing-action-deploy@v1` is only a **warning** (W3017).
+- npm latest must be published **with provenance** (S2008 -> E for new) = trusted publishing from GitHub Actions
+  (`id-token: write`). A workflow run triggered by the release tag must exist (S3032/W3032 -> E for new); npm releases
+  must be tagged on GitHub (E3034/E3036).
+- `ioBroker/testing-action-deploy` does **not** compute versions: on a pushed tag `vX.Y.Z` it builds, runs `npm publish`
+  and creates the GitHub release (body from the tag/commit). Version calculation is traditionally done locally by
+  `@alcalzone/release-script` (optional devDependency; if used, `.releaseconfig.json` + plugins are required).
+- Consequence: the **test half is fixed**, the **version calculation is free** - any tool may compute the version, update
+  `package.json`/`io-package.json` (version + translated news)/README changelog, commit and push the tag; the tag push then
+  runs `test-and-release.yml` incl. `deploy`. Tags pushed with the default `GITHUB_TOKEN` do **not** trigger other
+  workflows -> a PAT / GitHub App token is needed for that push.
+
 ## State roles (repochecker `config_StateRoles.js`) – roles used by this adapter
 
 | Role | Allowed type | read/write |

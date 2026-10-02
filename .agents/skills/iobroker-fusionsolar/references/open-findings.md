@@ -11,15 +11,20 @@ Work is organized in three levels (agreed with the maintainer):
 
 - [x] Dependencies, tooling (eslint 9 / prettier / tsc / @iobroker/testing 6), jsonConfig admin UI, unit tests, README/doc rework, project skill.
 - [x] Dedicated docs: `doc/RATE-LIMITS.md` (leading doc for limits/throttling), `doc/API-GENERATIONS.md` (5 platform turnovers), linked from both READMEs.
-- [ ] Workflow `test-and-release.yml`: `testing-action-check@v2` (W3028), `adapter-tests` with `needs: check-and-lint` (E3014),
-      node matrix **22, 24, 26** (E3025), `deploy` job (E3012) with node 24, `testing-action-deploy@v1`, permissions
-      `contents: write` + `id-token: write`, no npm-token.
+- [x] Workflow `test-and-release.yml`: check@v2, `needs`, node 22/24/26, single workflow with KVU HOOK (`versioning` +
+      own `deploy` with trusted publishing); `.releaseconfig.json` and release-script removed; KVU in `.kvu/` with unit tests.
 - [ ] npm **trusted publishing** for `iobroker.fusionsolar` (npm settings -> trusted publisher: GitHub `KornSW/ioBroker.fusionsolar`,
-      workflow `test-and-release.yml`) -> signed provenance (E2008).
+      workflow `test-and-release.yml`) -> signed provenance (E2008). **Must be set up before the first push that releases.**
+- [ ] Repository secret `KVU_DEPLOY_KEY` (SSH deploy key with write access) -> tag-triggered release runs (repochecker W3032 for new adapters).
+- [x] Decided (2026-10-02): release on every push; other branches create pre-releases `x.y.z-<branch>.<n>` (dist-tag `next`).
+- [ ] KVU: `io-package.json` `common.news` for the new version incl. translations (E1036/E1045/E1144) - ioBroker specific
+      extension (e.g. hook that runs `translate-adapter` after KVU) - needed before the enrollment.
+- [ ] ~~KVU: rotate old README changelog entries into `CHANGELOG_OLD.md`~~ - deliberately ignored for now (maintainer decision 2026-10-02; only a warning).
+- [ ] Original WP KVU: also reads/writes with `read_text()`/`write_text()` (CRLF lost on Windows) - fixed in the generic edition only.
 - [ ] Local debugging: set up `@iobroker/dev-server` (`npx @iobroker/dev-server setup`, then `watch`), document a VS Code
       launch configuration; old `.dev-server` folder from 2024 can be deleted.
 - [ ] Local Node 22.15.1 is too old for the integration test with js-controller dev (needs >= 22.19) -> update Node locally.
-- [ ] `.gitignore`: add `.commitinfo` (E9006).
+- [x] `.gitignore`: add `.commitinfo` (E9006) and `dist/` (KVU output).
 - [ ] dependabot: `cooldown: { default: 7 }` (E8915), ignore major `@types/node` (E8917); optional: random cron, limit 15, automerge workflow.
 - [ ] Clean up old `iobroker.fusionsolar-*.tgz` files in the repo root (ignored, local only).
 - [ ] 67 ESLint JSDoc warnings (missing param descriptions) - cosmetic.
@@ -94,7 +99,9 @@ Repochecker local run (5.22.9, `npx -y @iobroker/repochecker https://github.com/
 - [ ] **E1057** admin `>=7.4.10` -> **`>=7.6.17`** in `io-package.json` (+ README/doc requirements).
 - [ ] **E4050 / E4051** copyright line in README and LICENSE needs an email (`Copyright (c) 2022-2026 KornSW <...>`) - ask the maintainer for the address.
 - [ ] **E6013** remove the install-from-GitHub `<details>` block from README.md.
-- [ ] E2008 / E3012 / E3014 / E3025 / W3028 / E8915 / E8917 / E9006 -> see L1.
+- [x] E3012 / E3014 / E3025 / W3028 / E9006 fixed (repochecker local run after the KVU workflow: gone).
+- [ ] E2008 (provenance, after the first trusted publishing release), E8915 / E8917 (dependabot) -> see L1.
+- [ ] Accepted warnings: W3017 (own deploy steps instead of `ioBroker/testing-action-deploy`), W0062 (no release-script).
 - [ ] W3039 (no workflow runs), W4001 (not in latest) resolve themselves; W6020 `CHANGELOG_OLD.md` optional; S4038 `.vscode/settings.json` schemas optional.
 
 Found by research / manual review (not reported by the local check):
