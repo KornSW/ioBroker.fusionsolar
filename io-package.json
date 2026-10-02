@@ -133,6 +133,7 @@
         "compact": true,
         "connectionType": "cloud",
         "dataSource": "poll",
+        "messagebox": true,
         "adminUI": {
             "config": "json"
         },
@@ -160,7 +161,7 @@
         "polltime": 300,
         "timeslotlength": 3,
         "skipOptimizers": true,
-        "skipUnknownDevices": true,
+        "skipUnknownDevices": false,
         "apiVersion": "default",
         "apiRetry": true
     },

@@ -52,7 +52,7 @@ Den Adapter wie jeden anderen Adapter über den Reiter _Adapter_ im ioBroker-Adm
 | **Wartezeit zwischen API-Anfragen in Sekunden** | Pause zwischen zwei API-Aufrufen. Erhöhen, wenn Quota-Fehler auftreten. |
 | **API-Anfragen bei Limit-Fehlern wiederholen** | Wiederholt einen Aufruf (bis zu 3-mal, mit steigender Wartezeit), wenn die API einen Limit-Fehler meldet (`failCode 407` oder HTTP 403). |
 | **Geräte vom Typ 'Optimierer' überspringen** | Optimierer werden standardmäßig übersprungen – sie kosten zusätzliche API-Aufrufe. |
-| **Geräte unbekannten Typs überspringen** | Dem Adapter unbekannte Gerätetypen werden standardmäßig übersprungen. Wenn deaktiviert, werden alle von der API gelieferten Werte als generische Datenpunkte angelegt. |
+| **Geräte unbekannten Typs überspringen** | Standardmäßig aus: Auch Geräte, die das Datenmodell noch nicht kennt, werden geladen, und alle von der API gelieferten Werte werden als generische Datenpunkte angelegt (jeder neue Gerätetyp kostet einen zusätzlichen API-Aufruf pro Zyklus; Typen, die die API nicht unterstützt, werden erkannt und nicht mehr abgefragt). Einschalten, um API-Aufrufe zu sparen. |
 
 ## Datenpunkte
 
@@ -100,6 +100,17 @@ Jedes Gerät hat einen beschreibbaren Datenpunkt `updatePriority`. Damit lassen 
 | 6 | jedes 32. Mal | alle 160 min |
 
 Geräte desselben Typs werden mit einem einzigen API-Aufruf geladen – die Einstellung spart also nur dann Aufrufe, wenn sie für alle Geräte eines Typs gesetzt wird.
+
+## Datenmodell und Diagnose-Export
+
+Huawei bringt laufend neue Gerätetypen und Datenfelder. Der Adapter kennt die gängigen Datenpunkte mit sauberen Namen
+und Einheiten ([lib/model.json](../../lib/model.json)) und legt Werte neuer Geräte oder neuer Felder **automatisch** an.
+
+Werden Geräte oder Werte Ihrer Anlage noch nicht (gut) unterstützt, erzeugen Sie bitte einen Diagnose-Export
+(_Instanz-Einstellungen > Datenmodell und Diagnose > Diagnose-Export erzeugen und herunterladen_) und hängen ihn an ein
+[GitHub-Issue](https://github.com/KornSW/ioBroker.fusionsolar/issues). Der Export ist anonymisiert: Er enthält
+Gerätetypen, Gerätemodelle, Firmware-Versionen, Feldnamen und Beispielwerte, aber keine Anlagen-Codes, Namen,
+Adressen, Seriennummern, Koordinaten oder Zugangsdaten. Details (englisch): [MODEL.md](../MODEL.md).
 
 ## API-Limits und Fehlersuche
 

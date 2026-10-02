@@ -155,6 +155,42 @@
             "md": 6,
             "lg": 4,
             "xl": 4
+        },
+        "_headerModel": {
+            "type": "header",
+            "text": "Data model and diagnostics",
+            "size": 3,
+            "newLine": true,
+            "xs": 12,
+            "sm": 12,
+            "md": 12,
+            "lg": 12,
+            "xl": 12
+        },
+        "_modelHint": {
+            "type": "staticText",
+            "text": "modelHint",
+            "newLine": true,
+            "xs": 12,
+            "sm": 12,
+            "md": 12,
+            "lg": 12,
+            "xl": 12
+        },
+        "_createExport": {
+            "type": "sendTo",
+            "label": "Create and download diagnostic export",
+            "command": "diagnosticExport",
+            "variant": "contained",
+            "showProcess": true,
+            "openUrl": true,
+            "window": "_blank",
+            "newLine": true,
+            "xs": 12,
+            "sm": 12,
+            "md": 6,
+            "lg": 4,
+            "xl": 4
         }
     }
 }

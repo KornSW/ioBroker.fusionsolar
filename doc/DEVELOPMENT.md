@@ -6,15 +6,18 @@
 | --- | --- |
 | `main.js` | the adapter: configuration, poll loop, error handling / backoff, creation of objects and states |
 | `lib/fusionSolarApi.js` | client for the FusionSolar northbound API: login / re-login, throttling, retries, batching, error classification (`FusionSolarApiError.kind`) |
-| `lib/definitions.js` | data driven definitions of all states (API field -> state id, type, role, unit) and of the known device types |
+| `lib/model.json` | **the well-known data model**: device types, fields, state ids, roles, units, enum texts (see [MODEL.md](MODEL.md)) |
+| `lib/model.js` | dynamic model: loads `model.json`, resolves / infers fields, learns at runtime, diagnostic export |
+| `lib/definitions.js` | adapter constants that are not part of the model (update priority levels) |
 | `lib/*.test.js` | unit tests (mocha / chai), run with `npm run test:js` |
+| `test/fixtures/legacy-state-ids.json` | all state ids of the previous versions - `lib/model.test.js` fails if one gets lost |
 | `admin/jsonConfig.json` | admin user interface (jsonConfig), texts in `admin/i18n/*.json` |
 | `io-package.json` | adapter metadata and default configuration (`native`) |
 
 ## Rules
 
 - **The state ids are a public interface.** Users reference them in scripts and visualizations.
-  Never rename an `id` in `lib/definitions.js` - add new fields instead.
+  Never rename an `id` in `lib/model.json` - add new fields instead (guarded by `lib/model.test.js`).
 - Objects are written with `extendObject` once per adapter run (see `ensureObject`), so changed roles / units
   are applied to existing installations automatically.
 - Only fields contained in the API response are created as states (`null` / `undefined` values are skipped).
@@ -27,16 +30,16 @@
 - [RATE-LIMITS.md](RATE-LIMITS.md) - **leading document** for API limits and the adapter's throttling. Update it together
   with any change of the poll cycle, batching, retries or backoff.
 - [API-GENERATIONS.md](API-GENERATIONS.md) - API account generations and Huawei platform changes (2022-2025).
+- [MODEL.md](MODEL.md) - **leading document** for the dynamic data model, `model.json` and the diagnostic export.
 - `.agents/skills/iobroker-fusionsolar/` - project knowledge base for AI agents (API reference snapshot, ioBroker
   requirements, open findings, sources).
 
 ## Adding a device type
 
-1. Add the field definitions (`*_KPI_FIELDS`) to `lib/definitions.js` - take the field names from the API documentation.
-2. Register the type in `DEVICE_TYPES` with its `devTypeId`.
-3. Add a test to `lib/definitions.test.js` and document the type in both READMEs.
+See [MODEL.md](MODEL.md) "Adding a field / device type from a diagnostic export": add a `deviceTypes` entry and a
+`fieldSets` entry to `lib/model.json`, update `modelVersion`, run `npm run test:js`, document the type in both READMEs.
 
-Until a type is defined, users can get all of its values by disabling _Skip devices of unknown type_ (generic states).
+Until a type is defined, users get all of its values generically by disabling _Skip devices of unknown type_.
 
 ## Commands
 

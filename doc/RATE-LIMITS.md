@@ -76,7 +76,8 @@ with 407. There is **no headroom** for a second system using the same account.
 | Poll interval | _Poll interval in seconds_ (`polltime`), default **300**, minimum 60 | one update cycle per interval: plant realtime KPIs + device realtime KPIs |
 | Plant and device list | fixed: 24 h | loaded on start and then once a day (not in every cycle) |
 | Batching | fixed | all plants in one `getStationRealKpi` call, all devices **of the same type** in one `getDevRealKpi` call (chunks of 100) |
-| Skipped devices | fixed | dongles (no realtime data); optimizers and unknown devices unless enabled in the settings |
+| Skipped devices | settings | optimizers are skipped by default (_Skip devices of type optimizer_); unknown device types are loaded by default since v2 (_Skip devices of unknown type_ = off, costs one call per new type and cycle) |
+| Realtime support per device type | `lib/model.json` + learned model | types without realtime support are never requested; unknown types are tried once and remembered if the API rejects them (failCode 20013 / 20006); errors of one type do not stop the others |
 | Wait time between calls | _Wait time between API calls_ (`timeslotlength`), default 3 s | minimum time between two API calls; spreads the calls of a cycle |
 | Loading frequency per device | state `<device>.updatePriority` (0-6) | loads a device only every 1st/2nd/4th/.../32nd cycle (0 = only once after start). Saves calls only if **all devices of a type** are reduced |
 | Retries on quota errors | _Retry API calls on call limit errors_ (`apiRetry`), max. 3 retries | on failCode 407 / HTTP 403 the call is repeated after `wait time × (attempt + 1)` |
@@ -102,8 +103,10 @@ is only saved if all devices of that type are reduced.
    errors (HTTP 403 gateway quota, failCode 20200).
 2. **Calls are made as a burst** at the start of each cycle. The Home Assistant integration spreads the device types over
    the 5-minute window (one type per minute). Planned: evaluate spreading.
-3. **Unsupported device types** (e.g. optimizers, if enabled) are requested via `getDevRealKpi`, which only supports the
-   types 1, 10, 17, 38, 39, 41, 47 (+ 23070). The API answers with an error and the cycle fails. Planned: whitelist.
+3. ~~Unsupported device types are requested via `getDevRealKpi` and break the cycle~~ - **fixed**: types without realtime
+   support (`"realtime": false` in `lib/model.json`, e.g. dongles, optimizers) are never requested; unknown types are
+   tried once and remembered as unsupported on failCode 20013 / 20006; errors of one device type no longer stop the
+   other types (see [MODEL.md](MODEL.md)).
 4. The minimum poll interval of 60 s is too low for the current policy. Planned: warn if the interval is below 300 s.
 5. A daily-quota error (20618) is handled like a normal quota error. Planned: long backoff until the next day.
 

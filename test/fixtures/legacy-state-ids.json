@@ -1,0 +1,1010 @@
+{
+  "station": {
+    "info": [
+      {
+        "key": "stationCode",
+        "id": "stationCode"
+      },
+      {
+        "key": "stationName",
+        "id": "stationName"
+      },
+      {
+        "key": "stationAddr",
+        "id": "stationAddr"
+      },
+      {
+        "key": "stationLinkman",
+        "id": "stationLinkman"
+      },
+      {
+        "key": "linkmanPho",
+        "id": "linkmanPho"
+      },
+      {
+        "key": "aidType",
+        "id": "aidType"
+      },
+      {
+        "key": "plantCode",
+        "id": "plantCode"
+      },
+      {
+        "key": "plantName",
+        "id": "plantName"
+      },
+      {
+        "key": "plantAddress",
+        "id": "plantAddress"
+      },
+      {
+        "key": "contactMethod",
+        "id": "contactMethod"
+      },
+      {
+        "key": "contactPerson",
+        "id": "contactPerson"
+      },
+      {
+        "key": "latitude",
+        "id": "latitude"
+      },
+      {
+        "key": "longitude",
+        "id": "longitude"
+      },
+      {
+        "key": "gridConnectionDate",
+        "id": "gridConnectionDate"
+      },
+      {
+        "key": "capacity",
+        "id": "capacity"
+      }
+    ],
+    "realtime": [
+      {
+        "key": "total_income",
+        "id": "totalIncome"
+      },
+      {
+        "key": "total_power",
+        "id": "totalPower"
+      },
+      {
+        "key": "month_power",
+        "id": "monthPower"
+      },
+      {
+        "key": "day_power",
+        "id": "dayPower"
+      },
+      {
+        "key": "day_income",
+        "id": "dayIncome"
+      },
+      {
+        "key": "real_health_state",
+        "id": "realHealthState"
+      }
+    ]
+  },
+  "device": {
+    "info": [
+      {
+        "key": "id",
+        "id": "id"
+      },
+      {
+        "key": "devName",
+        "id": "devName"
+      },
+      {
+        "key": "devTypeId",
+        "id": "devTypeId"
+      },
+      {
+        "key": "esnCode",
+        "id": "esnCode"
+      },
+      {
+        "key": "invType",
+        "id": "invType"
+      },
+      {
+        "key": "latitude",
+        "id": "latitude"
+      },
+      {
+        "key": "longitude",
+        "id": "longitude"
+      },
+      {
+        "key": "optimizerNumber",
+        "id": "optimizerNumber"
+      },
+      {
+        "key": "softwareVersion",
+        "id": "softwareVersion"
+      }
+    ]
+  },
+  "deviceTypes": {
+    "1": {
+      "desc": "Inverter",
+      "fields": [
+        {
+          "key": "open_time",
+          "id": "openTime"
+        },
+        {
+          "key": "close_time",
+          "id": "closeTime"
+        },
+        {
+          "key": "active_power",
+          "id": "activePower"
+        },
+        {
+          "key": "reactive_power",
+          "id": "reactivePower"
+        },
+        {
+          "key": "power_factor",
+          "id": "powerFactor"
+        },
+        {
+          "key": "run_state",
+          "id": "runState"
+        },
+        {
+          "key": "inverter_state",
+          "id": "inverterState"
+        },
+        {
+          "key": "efficiency",
+          "id": "efficiency"
+        },
+        {
+          "key": "temperature",
+          "id": "temperature"
+        },
+        {
+          "key": "elec_freq",
+          "id": "elecFreq"
+        },
+        {
+          "key": "day_cap",
+          "id": "dayCap"
+        },
+        {
+          "key": "total_cap",
+          "id": "totalCap"
+        },
+        {
+          "key": "a_i",
+          "id": "AC.aI"
+        },
+        {
+          "key": "b_i",
+          "id": "AC.bI"
+        },
+        {
+          "key": "c_i",
+          "id": "AC.cI"
+        },
+        {
+          "key": "a_u",
+          "id": "AC.aU"
+        },
+        {
+          "key": "b_u",
+          "id": "AC.bU"
+        },
+        {
+          "key": "c_u",
+          "id": "AC.cU"
+        },
+        {
+          "key": "ab_u",
+          "id": "AC.abU"
+        },
+        {
+          "key": "bc_u",
+          "id": "AC.bcU"
+        },
+        {
+          "key": "ca_u",
+          "id": "AC.caU"
+        },
+        {
+          "key": "mppt_power",
+          "id": "MPPT.mpptPower"
+        },
+        {
+          "key": "mppt_total_cap",
+          "id": "MPPT.mpptTotalCap"
+        },
+        {
+          "key": "mppt_1_cap",
+          "id": "MPPT.mppt01Cap"
+        },
+        {
+          "key": "mppt_2_cap",
+          "id": "MPPT.mppt02Cap"
+        },
+        {
+          "key": "mppt_3_cap",
+          "id": "MPPT.mppt03Cap"
+        },
+        {
+          "key": "mppt_4_cap",
+          "id": "MPPT.mppt04Cap"
+        },
+        {
+          "key": "mppt_5_cap",
+          "id": "MPPT.mppt05Cap"
+        },
+        {
+          "key": "mppt_6_cap",
+          "id": "MPPT.mppt06Cap"
+        },
+        {
+          "key": "mppt_7_cap",
+          "id": "MPPT.mppt07Cap"
+        },
+        {
+          "key": "mppt_8_cap",
+          "id": "MPPT.mppt08Cap"
+        },
+        {
+          "key": "mppt_9_cap",
+          "id": "MPPT.mppt09Cap"
+        },
+        {
+          "key": "mppt_10_cap",
+          "id": "MPPT.mppt10Cap"
+        },
+        {
+          "key": "pv1_u",
+          "id": "PV.pv01u"
+        },
+        {
+          "key": "pv1_i",
+          "id": "PV.pv01i"
+        },
+        {
+          "key": "pv2_u",
+          "id": "PV.pv02u"
+        },
+        {
+          "key": "pv2_i",
+          "id": "PV.pv02i"
+        },
+        {
+          "key": "pv3_u",
+          "id": "PV.pv03u"
+        },
+        {
+          "key": "pv3_i",
+          "id": "PV.pv03i"
+        },
+        {
+          "key": "pv4_u",
+          "id": "PV.pv04u"
+        },
+        {
+          "key": "pv4_i",
+          "id": "PV.pv04i"
+        },
+        {
+          "key": "pv5_u",
+          "id": "PV.pv05u"
+        },
+        {
+          "key": "pv5_i",
+          "id": "PV.pv05i"
+        },
+        {
+          "key": "pv6_u",
+          "id": "PV.pv06u"
+        },
+        {
+          "key": "pv6_i",
+          "id": "PV.pv06i"
+        },
+        {
+          "key": "pv7_u",
+          "id": "PV.pv07u"
+        },
+        {
+          "key": "pv7_i",
+          "id": "PV.pv07i"
+        },
+        {
+          "key": "pv8_u",
+          "id": "PV.pv08u"
+        },
+        {
+          "key": "pv8_i",
+          "id": "PV.pv08i"
+        },
+        {
+          "key": "pv9_u",
+          "id": "PV.pv09u"
+        },
+        {
+          "key": "pv9_i",
+          "id": "PV.pv09i"
+        },
+        {
+          "key": "pv10_u",
+          "id": "PV.pv10u"
+        },
+        {
+          "key": "pv10_i",
+          "id": "PV.pv10i"
+        },
+        {
+          "key": "pv11_u",
+          "id": "PV.pv11u"
+        },
+        {
+          "key": "pv11_i",
+          "id": "PV.pv11i"
+        },
+        {
+          "key": "pv12_u",
+          "id": "PV.pv12u"
+        },
+        {
+          "key": "pv12_i",
+          "id": "PV.pv12i"
+        },
+        {
+          "key": "pv13_u",
+          "id": "PV.pv13u"
+        },
+        {
+          "key": "pv13_i",
+          "id": "PV.pv13i"
+        },
+        {
+          "key": "pv14_u",
+          "id": "PV.pv14u"
+        },
+        {
+          "key": "pv14_i",
+          "id": "PV.pv14i"
+        },
+        {
+          "key": "pv15_u",
+          "id": "PV.pv15u"
+        },
+        {
+          "key": "pv15_i",
+          "id": "PV.pv15i"
+        },
+        {
+          "key": "pv16_u",
+          "id": "PV.pv16u"
+        },
+        {
+          "key": "pv16_i",
+          "id": "PV.pv16i"
+        },
+        {
+          "key": "pv17_u",
+          "id": "PV.pv17u"
+        },
+        {
+          "key": "pv17_i",
+          "id": "PV.pv17i"
+        },
+        {
+          "key": "pv18_u",
+          "id": "PV.pv18u"
+        },
+        {
+          "key": "pv18_i",
+          "id": "PV.pv18i"
+        },
+        {
+          "key": "pv19_u",
+          "id": "PV.pv19u"
+        },
+        {
+          "key": "pv19_i",
+          "id": "PV.pv19i"
+        },
+        {
+          "key": "pv20_u",
+          "id": "PV.pv20u"
+        },
+        {
+          "key": "pv20_i",
+          "id": "PV.pv20i"
+        },
+        {
+          "key": "pv21_u",
+          "id": "PV.pv21u"
+        },
+        {
+          "key": "pv21_i",
+          "id": "PV.pv21i"
+        },
+        {
+          "key": "pv22_u",
+          "id": "PV.pv22u"
+        },
+        {
+          "key": "pv22_i",
+          "id": "PV.pv22i"
+        },
+        {
+          "key": "pv23_u",
+          "id": "PV.pv23u"
+        },
+        {
+          "key": "pv23_i",
+          "id": "PV.pv23i"
+        },
+        {
+          "key": "pv24_u",
+          "id": "PV.pv24u"
+        },
+        {
+          "key": "pv24_i",
+          "id": "PV.pv24i"
+        }
+      ]
+    },
+    "38": {
+      "desc": "Inverter",
+      "fields": [
+        {
+          "key": "open_time",
+          "id": "openTime"
+        },
+        {
+          "key": "close_time",
+          "id": "closeTime"
+        },
+        {
+          "key": "active_power",
+          "id": "activePower"
+        },
+        {
+          "key": "reactive_power",
+          "id": "reactivePower"
+        },
+        {
+          "key": "power_factor",
+          "id": "powerFactor"
+        },
+        {
+          "key": "run_state",
+          "id": "runState"
+        },
+        {
+          "key": "inverter_state",
+          "id": "inverterState"
+        },
+        {
+          "key": "efficiency",
+          "id": "efficiency"
+        },
+        {
+          "key": "temperature",
+          "id": "temperature"
+        },
+        {
+          "key": "elec_freq",
+          "id": "elecFreq"
+        },
+        {
+          "key": "day_cap",
+          "id": "dayCap"
+        },
+        {
+          "key": "total_cap",
+          "id": "totalCap"
+        },
+        {
+          "key": "a_i",
+          "id": "AC.aI"
+        },
+        {
+          "key": "b_i",
+          "id": "AC.bI"
+        },
+        {
+          "key": "c_i",
+          "id": "AC.cI"
+        },
+        {
+          "key": "a_u",
+          "id": "AC.aU"
+        },
+        {
+          "key": "b_u",
+          "id": "AC.bU"
+        },
+        {
+          "key": "c_u",
+          "id": "AC.cU"
+        },
+        {
+          "key": "ab_u",
+          "id": "AC.abU"
+        },
+        {
+          "key": "bc_u",
+          "id": "AC.bcU"
+        },
+        {
+          "key": "ca_u",
+          "id": "AC.caU"
+        },
+        {
+          "key": "mppt_power",
+          "id": "MPPT.mpptPower"
+        },
+        {
+          "key": "mppt_total_cap",
+          "id": "MPPT.mpptTotalCap"
+        },
+        {
+          "key": "mppt_1_cap",
+          "id": "MPPT.mppt01Cap"
+        },
+        {
+          "key": "mppt_2_cap",
+          "id": "MPPT.mppt02Cap"
+        },
+        {
+          "key": "mppt_3_cap",
+          "id": "MPPT.mppt03Cap"
+        },
+        {
+          "key": "mppt_4_cap",
+          "id": "MPPT.mppt04Cap"
+        },
+        {
+          "key": "mppt_5_cap",
+          "id": "MPPT.mppt05Cap"
+        },
+        {
+          "key": "mppt_6_cap",
+          "id": "MPPT.mppt06Cap"
+        },
+        {
+          "key": "mppt_7_cap",
+          "id": "MPPT.mppt07Cap"
+        },
+        {
+          "key": "mppt_8_cap",
+          "id": "MPPT.mppt08Cap"
+        },
+        {
+          "key": "mppt_9_cap",
+          "id": "MPPT.mppt09Cap"
+        },
+        {
+          "key": "mppt_10_cap",
+          "id": "MPPT.mppt10Cap"
+        },
+        {
+          "key": "pv1_u",
+          "id": "PV.pv01u"
+        },
+        {
+          "key": "pv1_i",
+          "id": "PV.pv01i"
+        },
+        {
+          "key": "pv2_u",
+          "id": "PV.pv02u"
+        },
+        {
+          "key": "pv2_i",
+          "id": "PV.pv02i"
+        },
+        {
+          "key": "pv3_u",
+          "id": "PV.pv03u"
+        },
+        {
+          "key": "pv3_i",
+          "id": "PV.pv03i"
+        },
+        {
+          "key": "pv4_u",
+          "id": "PV.pv04u"
+        },
+        {
+          "key": "pv4_i",
+          "id": "PV.pv04i"
+        },
+        {
+          "key": "pv5_u",
+          "id": "PV.pv05u"
+        },
+        {
+          "key": "pv5_i",
+          "id": "PV.pv05i"
+        },
+        {
+          "key": "pv6_u",
+          "id": "PV.pv06u"
+        },
+        {
+          "key": "pv6_i",
+          "id": "PV.pv06i"
+        },
+        {
+          "key": "pv7_u",
+          "id": "PV.pv07u"
+        },
+        {
+          "key": "pv7_i",
+          "id": "PV.pv07i"
+        },
+        {
+          "key": "pv8_u",
+          "id": "PV.pv08u"
+        },
+        {
+          "key": "pv8_i",
+          "id": "PV.pv08i"
+        },
+        {
+          "key": "pv9_u",
+          "id": "PV.pv09u"
+        },
+        {
+          "key": "pv9_i",
+          "id": "PV.pv09i"
+        },
+        {
+          "key": "pv10_u",
+          "id": "PV.pv10u"
+        },
+        {
+          "key": "pv10_i",
+          "id": "PV.pv10i"
+        },
+        {
+          "key": "pv11_u",
+          "id": "PV.pv11u"
+        },
+        {
+          "key": "pv11_i",
+          "id": "PV.pv11i"
+        },
+        {
+          "key": "pv12_u",
+          "id": "PV.pv12u"
+        },
+        {
+          "key": "pv12_i",
+          "id": "PV.pv12i"
+        },
+        {
+          "key": "pv13_u",
+          "id": "PV.pv13u"
+        },
+        {
+          "key": "pv13_i",
+          "id": "PV.pv13i"
+        },
+        {
+          "key": "pv14_u",
+          "id": "PV.pv14u"
+        },
+        {
+          "key": "pv14_i",
+          "id": "PV.pv14i"
+        },
+        {
+          "key": "pv15_u",
+          "id": "PV.pv15u"
+        },
+        {
+          "key": "pv15_i",
+          "id": "PV.pv15i"
+        },
+        {
+          "key": "pv16_u",
+          "id": "PV.pv16u"
+        },
+        {
+          "key": "pv16_i",
+          "id": "PV.pv16i"
+        },
+        {
+          "key": "pv17_u",
+          "id": "PV.pv17u"
+        },
+        {
+          "key": "pv17_i",
+          "id": "PV.pv17i"
+        },
+        {
+          "key": "pv18_u",
+          "id": "PV.pv18u"
+        },
+        {
+          "key": "pv18_i",
+          "id": "PV.pv18i"
+        },
+        {
+          "key": "pv19_u",
+          "id": "PV.pv19u"
+        },
+        {
+          "key": "pv19_i",
+          "id": "PV.pv19i"
+        },
+        {
+          "key": "pv20_u",
+          "id": "PV.pv20u"
+        },
+        {
+          "key": "pv20_i",
+          "id": "PV.pv20i"
+        },
+        {
+          "key": "pv21_u",
+          "id": "PV.pv21u"
+        },
+        {
+          "key": "pv21_i",
+          "id": "PV.pv21i"
+        },
+        {
+          "key": "pv22_u",
+          "id": "PV.pv22u"
+        },
+        {
+          "key": "pv22_i",
+          "id": "PV.pv22i"
+        },
+        {
+          "key": "pv23_u",
+          "id": "PV.pv23u"
+        },
+        {
+          "key": "pv23_i",
+          "id": "PV.pv23i"
+        },
+        {
+          "key": "pv24_u",
+          "id": "PV.pv24u"
+        },
+        {
+          "key": "pv24_i",
+          "id": "PV.pv24i"
+        }
+      ]
+    },
+    "39": {
+      "desc": "Battery",
+      "fields": [
+        {
+          "key": "run_state",
+          "id": "runState"
+        },
+        {
+          "key": "battery_status",
+          "id": "batteryStatus"
+        },
+        {
+          "key": "battery_soh",
+          "id": "batterySoh"
+        },
+        {
+          "key": "battery_soc",
+          "id": "batterySoc"
+        },
+        {
+          "key": "max_charge_power",
+          "id": "maxChargePower"
+        },
+        {
+          "key": "max_discharge_power",
+          "id": "maxDischargePower"
+        },
+        {
+          "key": "charge_cap",
+          "id": "chargeCap"
+        },
+        {
+          "key": "discharge_cap",
+          "id": "dischargeCap"
+        },
+        {
+          "key": "ch_discharge_power",
+          "id": "chDischargePower"
+        },
+        {
+          "key": "ch_discharge_model",
+          "id": "chDischargeModel"
+        },
+        {
+          "key": "busbar_u",
+          "id": "busbarU"
+        }
+      ]
+    },
+    "46": {
+      "desc": "Optimizer",
+      "fields": []
+    },
+    "47": {
+      "desc": "Meter",
+      "fields": [
+        {
+          "key": "meter_status",
+          "id": "meterStatus"
+        },
+        {
+          "key": "active_power",
+          "id": "activePower"
+        },
+        {
+          "key": "active_power_a",
+          "id": "activePowerA"
+        },
+        {
+          "key": "active_power_b",
+          "id": "activePowerB"
+        },
+        {
+          "key": "active_power_c",
+          "id": "activePowerC"
+        },
+        {
+          "key": "reactive_power",
+          "id": "reactivePower"
+        },
+        {
+          "key": "reactive_power_a",
+          "id": "reactivePowerA"
+        },
+        {
+          "key": "reactive_power_b",
+          "id": "reactivePowerB"
+        },
+        {
+          "key": "reactive_power_c",
+          "id": "reactivePowerC"
+        },
+        {
+          "key": "power_factor",
+          "id": "powerFactor"
+        },
+        {
+          "key": "active_cap",
+          "id": "activeCap"
+        },
+        {
+          "key": "reverse_active_cap",
+          "id": "reverseActiveCap"
+        },
+        {
+          "key": "meter_u",
+          "id": "meterU"
+        },
+        {
+          "key": "meter_i",
+          "id": "meterI"
+        },
+        {
+          "key": "b_u",
+          "id": "bU"
+        },
+        {
+          "key": "b_i",
+          "id": "bI"
+        },
+        {
+          "key": "c_u",
+          "id": "cU"
+        },
+        {
+          "key": "c_i",
+          "id": "cI"
+        },
+        {
+          "key": "ab_u",
+          "id": "abU"
+        },
+        {
+          "key": "bc_u",
+          "id": "bcU"
+        },
+        {
+          "key": "ca_u",
+          "id": "caU"
+        },
+        {
+          "key": "grid_frequency",
+          "id": "gridFrequency"
+        },
+        {
+          "key": "run_state",
+          "id": "runState"
+        },
+        {
+          "key": "reverse_reactive_valley",
+          "id": "reverse_reactive_valley"
+        },
+        {
+          "key": "reverse_reactive_peak",
+          "id": "reverse_reactive_peak"
+        },
+        {
+          "key": "reverse_active_peak",
+          "id": "reverse_active_peak"
+        },
+        {
+          "key": "reverse_active_cap",
+          "id": "reverse_active_cap"
+        },
+        {
+          "key": "reverse_reactive_power",
+          "id": "reverse_reactive_power"
+        },
+        {
+          "key": "reverse_reactive_top",
+          "id": "reverse_reactive_top"
+        },
+        {
+          "key": "reverse_active_valley",
+          "id": "reverse_active_valley"
+        },
+        {
+          "key": "positive_reactive_peak",
+          "id": "positive_reactive_peak"
+        },
+        {
+          "key": "positive_reactive_top",
+          "id": "positive_reactive_top"
+        },
+        {
+          "key": "positive_reactive_valley",
+          "id": "positive_reactive_valley"
+        },
+        {
+          "key": "positive_reactive_power",
+          "id": "positive_reactive_power"
+        },
+        {
+          "key": "positive_active_peak",
+          "id": "positive_active_peak"
+        },
+        {
+          "key": "positive_active_top",
+          "id": "positive_active_top"
+        },
+        {
+          "key": "positive_active_valley",
+          "id": "positive_active_valley"
+        },
+        {
+          "key": "positive_active_power",
+          "id": "positive_active_power"
+        },
+        {
+          "key": "total_apparent_power",
+          "id": "total_apparent_power"
+        }
+      ]
+    },
+    "62": {
+      "desc": "Dongle",
+      "fields": []
+    }
+  }
+}

@@ -16,6 +16,7 @@ and read the referenced files when the task touches their topic.
 | --- | --- |
 | Huawei FusionSolar northbound API (auth, session, rate limits, failCodes, device types, fields/units, account setup) - based on the official reference PDF | [references/huawei-northbound-api.md](references/huawei-northbound-api.md) |
 | **Rate limits and throttling** (leading document, user + developer facing) | [doc/RATE-LIMITS.md](../../../doc/RATE-LIMITS.md) |
+| **Dynamic data model**, `lib/model.json` format, learned model, diagnostic export, how the model grows | [doc/MODEL.md](../../../doc/MODEL.md) |
 | **API account generations and Huawei platform changes** (5 turnovers 2022-2025, symptoms, adapter behaviour) | [doc/API-GENERATIONS.md](../../../doc/API-GENERATIONS.md) |
 | Lessons learned from the Home Assistant integration (pitfalls, value conversions, rate limiting strategy, kiosk mode, source locations) | [references/ha-fusionsolar-insights.md](references/ha-fusionsolar-insights.md) |
 | ioBroker quality requirements, repochecker rules, review checklist, enrollment process (latest -> stable) | [references/iobroker-requirements.md](references/iobroker-requirements.md) |
@@ -42,7 +43,9 @@ and read the referenced files when the task touches their topic.
 | --- | --- |
 | `main.js` | adapter class `FusionSolarConnector`: config validation (`readConfig`), poll loop (`poll` -> `updateAll`), error backoff (`handlePollError`), object/state creation (`writeFields`, `ensureObject`) |
 | `lib/fusionSolarApi.js` | `FusionSolarApi`: login/re-login, throttling (`throttle`), retries, batching (max 100 ids per call), error classification `FusionSolarApiError.kind` = `auth`/`quota`/`permission`/`api`/`network`/`invalidResponse` |
-| `lib/definitions.js` | data-driven state definitions (`*_FIELDS`), `DEVICE_TYPES` (devTypeId -> definition), `isDueForUpdate` (updatePriority logic) |
+| `lib/model.json` | **well-known data model** (device types, fields, ids, roles, units, enums) - maintained, shipped, grows via diagnostic exports |
+| `lib/model.js` | `DataModel`: resolves fields per response (known + inferred), learns per instance (`model/learned-model.json` in the instance file storage), remembers types without realtime support, anonymized diagnostic export (`model/diagnostic-export.json`, admin button via `sendTo` "diagnosticExport") |
+| `lib/definitions.js` | non-model constants: update priority levels, `isDueForUpdate` |
 | `lib/*.test.js` | mocha/chai unit tests with a fake http client (no network) |
 | `admin/jsonConfig.json`, `admin/i18n/*.json` | admin UI (jsonConfig), 11 languages |
 | `io-package.json` / `package.json` | metadata; `native` = default config |
@@ -54,7 +57,8 @@ Poll cycle: (re)load station + device list on start and every 24 h -> `getStatio
 
 ## Hard rules
 
-1. **State ids are a public API.** Users reference them in scripts/VIS. Never rename an `id` in `lib/definitions.js`;
+1. **State ids are a public API.** Users reference them in scripts/VIS. Never rename an `id` in `lib/model.json`
+   (guarded by `lib/model.test.js` against `test/fixtures/legacy-state-ids.json` - extend the fixture when ids are added);
    the structure `<stationCode>.<deviceId>.kpi.realtime.<id>` must stay. Snake_case meter ids are kept on purpose.
 2. **API call budget is the #1 stability factor** (official limits): `getDevRealKpi` and `getStationRealKpi` only
    `Roundup(n/100)` calls per 5 min (per device type / for all plants), plant list 24 per day, `getDevList`
@@ -115,6 +119,9 @@ If local Node is < 22.19, run the integration test against the stable controller
   plus one call per device caused permanent 407 errors).
 - `updatePriority` 0 = loaded once on the first cycle after start, then never (matches the old documentation).
 - Station `capacity` has no unit (gen-1 delivers MW, gen-2 kWp).
+- `skipUnknownDevices` default **false** since v2 (decided 2026-10-02): with the dynamic model unknown types are safe to
+  load (one call per new type, unsupported types are detected and not requested again). Existing instances keep their
+  stored value.
 - Version **2.0.0** (breaking: Node >= 22, js-controller >= 6.0.11, admin >= 7.6.17, new admin UI).
 - **Releases via KVU** (Korn Versioning Utility, `.kvu/`, generic edition of the maintainer's `WP-*` release.py) instead
   of `@alcalzone/release-script`: **one** workflow `test-and-release.yml` = standard ioBroker test half + "KVU HOOK"

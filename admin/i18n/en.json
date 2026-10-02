@@ -21,5 +21,8 @@
     "Devices": "Devices",
     "Skip devices of type 'optimizer'": "Skip devices of type 'optimizer'",
     "Skip devices of unknown type": "Skip devices of unknown type",
-    "skipHelp": "Every device needs additional API calls - skipping devices helps to stay within the API limits"
+    "skipHelp": "Every device needs additional API calls - skipping devices helps to stay within the API limits",
+    "Data model and diagnostics": "Data model and diagnostics",
+    "modelHint": "The adapter knows the data points of the common Huawei devices (inverters, batteries, meters, EMMA, ...). Values of new devices or new fields are created automatically. The diagnostic export lists the device types and data fields of your system (without plant codes, names, addresses, serial numbers or coordinates). Please attach it to a GitHub issue, so that new devices can get proper names and units.",
+    "Create and download diagnostic export": "Create and download diagnostic export"
 }

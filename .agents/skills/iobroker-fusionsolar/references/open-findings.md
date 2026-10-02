@@ -63,7 +63,14 @@ API robustness (sources: official reference + HA analysis):
 - [ ] **407 retry redesign:** quick retries (seconds) inside the 5-min window are useless and burn quota. Options: no retry on 407,
       skip the current cycle and continue in the next window; keep retries only for HTTP 403 gateway quota / 20200 "system busy".
       The config option `apiRetry` must be re-thought (maybe remove or redefine).
-- [ ] **Whitelist for `getDevRealKpi`:** only types 1, 10, 17, 38, 39, 41, 47, 23070. Today optimizers (46) and unknown types are
+- [x] **Dynamic data model** (`lib/model.json` + `lib/model.js`, 2026-10-02): official units per type (17 kW / 47 W,
+      battery_soh no unit, open/close_time as value.time), enums (inverter_state, ch_discharge_model 0-12), new types
+      10/17/41/23070, generic + inferred unknown fields, learned model, anonymized diagnostic export (admin button),
+      obsolete units removed from existing objects. Real API (2026-10) delivers new device list fields `model`, `devDn`.
+- [ ] Not verified with real responses yet: units of EMMA (23070, HA based), power sensor per-phase / tariff fields,
+      grid meter (17). Ask users for diagnostic exports.
+- [ ] Idea: tool to merge `modelCandidates` of an export into `lib/model.json` (currently manual, see doc/MODEL.md).
+- [x] **Whitelist for `getDevRealKpi`** (done by the dynamic model: `"realtime": false` + learned unsupported types): Today optimizers (46) and unknown types are
       requested when the user enables them -> failCode 20013 -> **the whole cycle fails**. Also isolate errors per device type
       (one failing type must not stop the others).
 - [ ] Handle **306/307** like 305 (re-login).

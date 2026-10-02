@@ -69,7 +69,7 @@ Install the adapter like any other adapter via the _Adapters_ tab of the ioBroke
 | **Wait time between API calls in seconds** | Pause between two API calls. Increase it if you get quota errors. |
 | **Retry API calls on call limit errors** | Retries a call (up to 3 times, with increasing wait times) if the API reports a call limit error (`failCode 407` or HTTP 403). |
 | **Skip devices of type 'optimizer'** | Optimizers are skipped by default - loading them needs additional API calls. |
-| **Skip devices of unknown type** | Devices which are not known by this adapter are skipped by default. If you disable it, all values delivered by the API are written as generic states. |
+| **Skip devices of unknown type** | Off by default: devices which are not part of the data model yet are loaded too and all values delivered by the API are written as generic states (each new device type needs one additional API call per cycle; types the API does not support are detected and no longer requested). Enable it to save API calls. |
 
 ## States
 
@@ -94,9 +94,16 @@ fusionsolar.0
 | --- | --- |
 | Inverter (`1`, `38`) | `activePower` (kW), `reactivePower`, `efficiency` (%), `temperature` (°C), `elecFreq` (Hz), `dayCap` / `totalCap` (kWh), `runState`, `inverterState`, `AC.aU` / `AC.aI` ... (per phase), `MPPT.mpptPower`, `MPPT.mppt01Cap` ..., `PV.pv01u` / `PV.pv01i` ... (per string) |
 | Battery (`39`) | `batterySoc` (%), `batterySoh`, `chDischargePower` (W, positive = charging, negative = discharging), `batteryStatus`, `chargeCap` / `dischargeCap` (kWh), `maxChargePower` / `maxDischargePower` (W), `busbarU` (V) |
-| Power meter (`47`) | `activePower` (W, per phase: `activePowerA/B/C`), `reactivePower`, `meterU` / `meterI`, `bU`, `cU`, ..., `gridFrequency` (Hz), `activeCap` (kWh), `reverseActiveCap` (kWh), ... |
-| Dongle (`62`) | the API does not deliver realtime values for dongles |
-| Optimizer (`46`) and unknown types | all values delivered by the API (only if enabled in the settings) |
+| Power sensor / meter (`47`) | `activePower` (**W**, per phase: `activePowerA/B/C`), `reactivePower` (var), `meterU` / `meterI`, `bU`, `cU`, ..., `gridFrequency` (Hz), `activeCap` (kWh, import), `reverseActiveCap` (kWh, export), tariff counters |
+| Grid meter (`17`) | `activePower` (**kW**, per phase: `activePowerA/B/C`), `reactivePower` (kvar), voltages, currents, `gridFrequency`, `activeCap` / `reverseActiveCap` (kWh), tariff counters |
+| EMMA (`23070`) | `activePower` (kW), `activePowerA/B/C`, `exActivePower` (external meter), `activeCap` / `reverseActiveCap` / `exActiveCap` / `exReverseActiveCap` (kWh), voltages, currents |
+| ESS (`41`) | `chDischargePower` (W), `batterySoc` (%), `batterySoh`, `chargeCap` / `dischargeCap` (kWh) |
+| EMI (`10`) | `temperature`, `pvTemperature` (°C), `windSpeed` (m/s), `windDirection` (°), `radiantLine` / `horizRadiantLine` (W/m²), `radiantTotal` / `horizRadiantTotal` (MJ/m²) |
+| Dongle (`62`), optimizer (`46`), SmartLogger, ... | the API does not deliver realtime values for these types - only the device information is created |
+| Unknown device types | all values delivered by the API (unless _Skip devices of unknown type_ is enabled) |
+
+New fields and device types are created automatically (see "Data model" below). The complete list of the well-known
+data points incl. units is [lib/model.json](lib/model.json).
 
 > [!TIP]
 > The sign of the meter's `activePower` depends on how the meter is installed. Compare it once with the
@@ -117,6 +124,17 @@ Every device has a writable state `updatePriority` to reduce the number of API c
 | 6 | every 32th time | every 160 min |
 
 Devices of the same type are loaded with one API call, so the setting saves API calls only if all devices of a type are affected.
+
+## Data model and diagnostic export
+
+Huawei keeps adding device types and data fields. The adapter knows the well-known data points with proper names and
+units ([lib/model.json](lib/model.json)) and creates values of new devices or new fields **automatically**.
+
+If your system has devices or values which are not (well) supported yet, please create a diagnostic export
+(_instance settings > Data model and diagnostics > Create and download diagnostic export_) and attach it to a
+[GitHub issue](https://github.com/KornSW/ioBroker.fusionsolar/issues). The export is anonymized: it contains device
+types, device models, firmware versions, field names and example values, but no plant codes, names, addresses, serial
+numbers, coordinates or credentials. Details: [doc/MODEL.md](doc/MODEL.md).
 
 ## API limits and troubleshooting
 
@@ -170,6 +188,12 @@ Contributors are very welcome!
 - (KornSW) re-login, retries and error handling were reworked (limited retries, exponential backoff, clear log messages)
 - (KornSW) the default poll interval for new instances is now 300 seconds
 - (KornSW) optimizers and unknown devices (if enabled) now get all values delivered by the API
+- (KornSW) **New Feature:** dynamic data model - the well-known data points are maintained in `lib/model.json`, new fields and device types are created automatically
+- (KornSW) **New Feature:** anonymized diagnostic export (instance settings) to get new devices / fields into the model
+- (KornSW) **New Feature:** device types EMI (10), grid meter (17), ESS (41) and EMMA (23070); texts for inverter states and battery charge modes
+- (KornSW) devices of unknown type are now loaded by default for new instances (setting _Skip devices of unknown type_ is off)
+- (KornSW) units according to the official Huawei reference (e.g. `batterySoh` has no unit, `openTime` / `closeTime` are timestamps), wrong units of older versions are removed
+- (KornSW) device types without realtime data (e.g. optimizers) are no longer requested, errors of one device type no longer stop the update of the others
 
 ### 1.3.1
 

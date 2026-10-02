@@ -3,6 +3,14 @@
 const utils = require('@iobroker/adapter-core');
 const { FusionSolarApi, FusionSolarApiError } = require('./lib/fusionSolarApi');
 const definitions = require('./lib/definitions');
+const { DataModel, loadModel } = require('./lib/model');
+const ioPackage = require('./io-package.json');
+
+/** files in the file storage of the instance (meta object "fusionsolar.<n>") */
+const LEARNED_MODEL_FILE = 'model/learned-model.json';
+const DIAGNOSTIC_EXPORT_FILE = 'model/diagnostic-export.json';
+/** failCodes meaning "this interface does not support the device type" */
+const UNSUPPORTED_DEVICE_TYPE_FAIL_CODES = [20006, 20013];
 
 const DEFAULT_API_HOST = 'eu5.fusionsolar.huawei.com';
 const MIN_POLL_INTERVAL_SEC = 60;
@@ -29,7 +37,7 @@ const AUTH_ERROR_BACKOFF_MS = 60 * 60 * 1000;
  * @property {string} id - device id as string
  * @property {number} devTypeId - device type id of the API
  * @property {string} folder - object id of the device folder
- * @property {definitions.DeviceType} type - definition of the device type
+ * @property {import('./lib/model').DeviceType} type - definition of the device type
  * @property {Record<string, any>} info - device info as delivered by the API
  */
 
@@ -65,14 +73,18 @@ class FusionSolarConnector extends utils.Adapter {
         this.unloading = false;
         /** object ids which were already created / updated during this adapter run */
         this.ensuredObjects = new Set();
+        /** effective data model (lib/model.json + learned at runtime) */
+        this.model = new DataModel();
 
         this.on('ready', this.onReady.bind(this));
         this.on('stateChange', this.onStateChange.bind(this));
+        this.on('message', this.onMessage.bind(this));
         this.on('unload', this.onUnload.bind(this));
     }
 
     async onReady() {
         await this.setState('info.connection', false, true);
+        await this.initModel();
 
         const config = this.readConfig();
         if (!config) {
@@ -196,6 +208,86 @@ class FusionSolarConnector extends utils.Adapter {
         await this.setState(id, priority, true);
     }
 
+    /**
+     * Messages from the admin UI (jsonConfig "sendTo" button).
+     *
+     * @param {ioBroker.Message} obj the message
+     */
+    async onMessage(obj) {
+        if (!obj || obj.command !== 'diagnosticExport') {
+            return;
+        }
+        let response;
+        try {
+            await this.saveModelFiles(true);
+            // "openUrl": the admin (jsonConfig sendTo) opens the file in a new browser tab
+            const url = `/files/${this.namespace}/${DIAGNOSTIC_EXPORT_FILE}`;
+            response = { result: `Diagnostic export created: ${url}`, openUrl: url, window: '_blank' };
+        } catch (error) {
+            response = { error: `Diagnostic export failed: ${error && error.message ? error.message : error}` };
+        }
+        if (obj.callback) {
+            this.sendTo(obj.from, obj.command, response, obj.callback);
+        }
+    }
+
+    /*************************************************************************
+     * DATA MODEL (lib/model.json + learned at runtime, see doc/MODEL.md)
+     **************************************************************************/
+
+    /**
+     * Creates the file storage of the instance and loads the learned model.
+     */
+    async initModel() {
+        try {
+            await this.setObjectNotExistsAsync(this.namespace, {
+                type: 'meta',
+                common: { name: 'FusionSolar data model and diagnostics', type: 'meta.user' },
+                native: {},
+            });
+            let learned = null;
+            try {
+                const file = await this.readFileAsync(this.namespace, LEARNED_MODEL_FILE);
+                learned = JSON.parse(String(file.file));
+            } catch {
+                // first start - nothing learned yet
+            }
+            this.model = new DataModel(loadModel(), learned);
+            await this.saveModelFiles(true);
+        } catch (error) {
+            this.log.warn(
+                `Could not initialize the learned data model: ${error && error.message ? error.message : error}`,
+            );
+        }
+    }
+
+    /**
+     * Saves the learned model and the diagnostic export to the file storage of the instance.
+     *
+     * @param {boolean} [force] save even if nothing changed
+     */
+    async saveModelFiles(force = false) {
+        if (!force && !this.model.dirty) {
+            return;
+        }
+        const learnedJson = JSON.stringify(this.model.learned, null, 2);
+        await this.writeFileAsync(this.namespace, LEARNED_MODEL_FILE, learnedJson);
+        const exportJson = JSON.stringify(
+            this.model.createDiagnosticExport({
+                adapterVersion: ioPackage.common.version,
+                nodeVersion: process.version,
+                apiGeneration: this.api ? this.api.apiVersion : 'not configured',
+                apiHost: this.config.apiHost || '',
+                pollIntervalSec: Math.round(this.pollIntervalMs / 1000),
+                stations: this.stations.length,
+            }),
+            null,
+            2,
+        );
+        await this.writeFileAsync(this.namespace, DIAGNOSTIC_EXPORT_FILE, exportJson);
+        this.model.dirty = false;
+    }
+
     /*************************************************************************
      * POLLING
      **************************************************************************/
@@ -212,8 +304,15 @@ class FusionSolarConnector extends utils.Adapter {
                 return;
             }
             this.consecutiveErrors++;
+            this.model.recordError(error);
+            this.model.dirty = true;
             nextPollMs = this.handlePollError(error);
             await this.setState('info.connection', false, true);
+        }
+        try {
+            await this.saveModelFiles();
+        } catch (error) {
+            this.log.debug(`Could not save the learned data model: ${error && error.message ? error.message : error}`);
         }
         if (!this.unloading) {
             this.pollTimer = this.setTimeout(() => this.poll(), nextPollMs);
@@ -295,10 +394,11 @@ class FusionSolarConnector extends utils.Adapter {
         }
 
         const deviceInfos = await this.api.getDevList(this.stations.map(station => station.code));
+        this.model.observeDeviceList(deviceInfos);
         this.devices = [];
         for (const info of deviceInfos) {
             const devTypeId = Number(info.devTypeId);
-            const type = definitions.getDeviceType(devTypeId);
+            const type = this.model.getDeviceType(devTypeId);
             if (type.optimizer && this.config.skipOptimizers) {
                 this.log.debug(`skipping optimizer ${info.id} (see adapter settings)`);
                 continue;
@@ -349,10 +449,15 @@ class FusionSolarConnector extends utils.Adapter {
                 this.log.debug(`no realtime KPIs returned for station ${station.code}`);
                 continue;
             }
+            this.model.observeStationRealtime(kpi);
             const kpiFolder = `${station.folder}.kpi.realtime`;
             await this.ensureFolder(`${station.folder}.kpi`, 'KPIs', 'folder');
             await this.ensureFolder(kpiFolder, 'Realtime KPIs', 'channel');
-            await this.writeFields(kpiFolder, definitions.STATION_REALTIME_KPI_FIELDS, kpi);
+            await this.writeFields(
+                kpiFolder,
+                this.model.stationRealtimeFields(kpi, key => this.toObjectId(key)),
+                kpi,
+            );
             await this.writeLastUpdate(kpiFolder);
             await this.writeLastUpdate(station.folder);
         }
@@ -368,8 +473,8 @@ class FusionSolarConnector extends utils.Adapter {
 
         const dueDevicesByType = new Map();
         for (const device of this.devices) {
-            if (device.type.kpiFields && device.type.kpiFields.length === 0) {
-                // the API does not deliver realtime KPIs for this type (e.g. dongles) -> save the API call
+            if (!this.model.isRealtimeSupported(device.devTypeId)) {
+                // getDevRealKpi does not support this type (e.g. dongles, optimizers) -> save the API call
                 continue;
             }
             const priority = await this.getUpdatePriority(device);
@@ -383,10 +488,29 @@ class FusionSolarConnector extends utils.Adapter {
         }
 
         for (const [devTypeId, devices] of dueDevicesByType) {
-            const kpis = await this.api.getDevRealKpi(
-                devices.map(device => device.id),
-                devTypeId,
-            );
+            let kpis;
+            try {
+                kpis = await this.api.getDevRealKpi(
+                    devices.map(device => device.id),
+                    devTypeId,
+                );
+            } catch (error) {
+                // errors of a single device type must not stop the update of the other types - except errors which
+                // affect the whole account (quota, login, network): they are handled by the poll cycle
+                if (!(error instanceof FusionSolarApiError) || error.kind !== 'api') {
+                    throw error;
+                }
+                this.model.recordError(error);
+                if (error.failCode !== undefined && UNSUPPORTED_DEVICE_TYPE_FAIL_CODES.includes(error.failCode)) {
+                    this.model.markRealtimeUnsupported(devTypeId, `failCode ${error.failCode}`);
+                    this.log.info(
+                        `The API does not deliver realtime data for device type ${devTypeId} (${this.model.getDeviceType(devTypeId).name}) - it will no longer be requested`,
+                    );
+                } else {
+                    this.log.warn(`Realtime data of device type ${devTypeId} could not be loaded: ${error.message}`);
+                }
+                continue;
+            }
             for (const device of devices) {
                 const kpi = kpis.get(device.id);
                 if (!kpi) {
@@ -418,7 +542,10 @@ class FusionSolarConnector extends utils.Adapter {
     async writeStationInfo(station) {
         const name = station.info.stationName || station.info.plantName || station.code;
         await this.ensureFolder(station.folder, String(name), 'folder');
-        await this.writeFields(station.folder, definitions.STATION_INFO_FIELDS, station.info);
+        const fields = this.model.resolveFields(this.model.model.station.info, station.info, key =>
+            this.toObjectId(key),
+        );
+        await this.writeFields(station.folder, fields, station.info);
     }
 
     /**
@@ -426,7 +553,8 @@ class FusionSolarConnector extends utils.Adapter {
      */
     async writeDeviceInfo(device) {
         await this.ensureFolder(device.folder, String(device.info.devName || device.id), 'device');
-        await this.writeFields(device.folder, definitions.DEVICE_INFO_FIELDS, device.info);
+        const fields = this.model.resolveFields(this.model.model.device.info, device.info, key => this.toObjectId(key));
+        await this.writeFields(device.folder, fields, device.info);
         await this.writeFields(
             device.folder,
             [{ key: 'devTypeDesc', id: 'devTypeDesc', type: 'string', role: 'text' }],
@@ -460,10 +588,9 @@ class FusionSolarConnector extends utils.Adapter {
      * @param {Record<string, any>} kpi
      */
     async writeDeviceKpis(device, kpi) {
+        this.model.observeDeviceRealtime(device.devTypeId, kpi);
         const kpiFolder = `${device.folder}.kpi.realtime`;
-        const fields =
-            device.type.kpiFields ||
-            Object.keys(kpi).map(key => definitions.buildGenericField(key, kpi[key], this.toObjectId(key)));
+        const fields = this.model.deviceRealtimeFields(device.devTypeId, kpi, key => this.toObjectId(key));
 
         await this.ensureFolder(`${device.folder}.kpi`, 'KPIs', 'folder');
         await this.ensureFolder(kpiFolder, 'Realtime KPIs', 'channel');
@@ -485,7 +612,7 @@ class FusionSolarConnector extends utils.Adapter {
      * Writes all fields which are contained in the data object (null / undefined values are skipped).
      *
      * @param {string} parentId
-     * @param {definitions.FieldDefinition[]} fields
+     * @param {import('./lib/model').FieldDefinition[]} fields
      * @param {Record<string, any>} data
      */
     async writeFields(parentId, fields, data) {
@@ -515,7 +642,12 @@ class FusionSolarConnector extends utils.Adapter {
             if (field.states) {
                 common.states = field.states;
             }
-            await this.ensureObject(id, { type: 'state', common, native: {} });
+            if (field.desc) {
+                common.desc = field.desc;
+            }
+            // unit / states which the model no longer defines (e.g. a wrong unit of an older version) are removed
+            const obsolete = ['unit', 'states'].filter(key => !(key in common));
+            await this.ensureObject(id, { type: 'state', common, native: {} }, obsolete);
             await this.setState(id, value, true);
         }
     }
@@ -533,12 +665,27 @@ class FusionSolarConnector extends utils.Adapter {
      * Creates the object or updates its definition (once per adapter run).
      * Using extendObject also updates roles / units of objects created by older adapter versions.
      *
-     * @param {string} id
-     * @param {any} obj
+     * @param {string} id the object id
+     * @param {any} obj the (partial) object
+     * @param {string[]} [obsoleteCommonKeys] common properties to remove if the existing object still has them
      */
-    async ensureObject(id, obj) {
+    async ensureObject(id, obj, obsoleteCommonKeys = []) {
         if (this.ensuredObjects.has(id)) {
             return;
+        }
+        if (obsoleteCommonKeys.length) {
+            const existing = await this.getObjectAsync(id);
+            const toRemove = obsoleteCommonKeys.filter(key => existing && existing.common && key in existing.common);
+            if (existing && toRemove.length) {
+                // extendObject cannot delete properties -> write the merged object (keeps custom settings like history)
+                const merged = { ...existing, common: { ...existing.common, ...obj.common } };
+                for (const key of toRemove) {
+                    delete merged.common[key];
+                }
+                await this.setObjectAsync(id, merged);
+                this.ensuredObjects.add(id);
+                return;
+            }
         }
         await this.extendObject(id, obj);
         this.ensuredObjects.add(id);
